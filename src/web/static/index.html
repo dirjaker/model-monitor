@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Model Monitor - Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg-primary:#0a0e17;
+  --bg-secondary:#111827;
+  --bg-card:#1a2332;
+  --bg-hover:#243044;
+  --text-primary:#e2e8f0;
+  --text-secondary:#94a3b8;
+  --text-muted:#64748b;
+  --accent:#3b82f6;
+  --accent-hover:#2563eb;
+  --green:#10b981;
+  --red:#ef4444;
+  --yellow:#f59e0b;
+  --border:#1e293b;
+  --radius:8px;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg-primary);color:var(--text-primary);line-height:1.6;min-height:100vh}
+a{color:var(--accent);text-decoration:none}
+.header{background:var(--bg-secondary);border-bottom:1px solid var(--border);padding:16px 32px;display:flex;align-items:center;justify-content:space-between}
+.header h1{font-size:20px;font-weight:600;letter-spacing:-0.5px}
+.header .status{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-secondary)}
+.header .dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.container{max-width:1400px;margin:0 auto;padding:24px 32px}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px}
+.stat-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;transition:border-color .2s}
+.stat-card:hover{border-color:var(--accent)}
+.stat-card .label{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:8px}
+.stat-card .value{font-size:28px;font-weight:700;color:var(--text-primary)}
+.stat-card .sub{font-size:12px;color:var(--text-secondary);margin-top:4px}
+.stat-card.accent .value{color:var(--accent)}
+.stat-card.green .value{color:var(--green)}
+.charts-grid{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:24px}
+.chart-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:20px}
+.chart-card h3{font-size:14px;font-weight:600;color:var(--text-secondary);margin-bottom:16px;text-transform:uppercase;letter-spacing:.5px}
+.chart-wrap{position:relative;height:300px}
+.table-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:24px}
+.table-card h3{font-size:14px;font-weight:600;color:var(--text-secondary);margin-bottom:16px;text-transform:uppercase;letter-spacing:.5px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:10px 12px;border-bottom:2px solid var(--border);color:var(--text-muted);text-transform:uppercase;font-size:11px;letter-spacing:.5px}
+td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text-secondary)}
+tr:hover td{background:var(--bg-hover)}
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600}
+.badge-proxy{background:rgba(59,130,246,.15);color:var(--accent)}
+.badge-sniffer{background:rgba(16,185,129,.15);color:var(--green)}
+.footer{text-align:center;padding:32px;color:var(--text-muted);font-size:12px;border-top:1px solid var(--border);margin-top:32px}
+@media(max-width:768px){
+  .charts-grid{grid-template-columns:1fr}
+  .container{padding:16px}
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .stat-card .value{font-size:20px}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Model Monitor</h1>
+  <div class="status">
+    <span class="dot"></span>
+    <span id="statusText">Loading...</span>
+  </div>
+</div>
+
+<div class="container">
+  <!-- 统计卡片 -->
+  <div class="stats-grid">
+    <div class="stat-card accent">
+      <div class="label">Total Calls</div>
+      <div class="value" id="totalCalls">--</div>
+      <div class="sub" id="totalCallsSub">API requests</div>
+    </div>
+    <div class="stat-card green">
+      <div class="label">Total Cost</div>
+      <div class="value" id="totalCost">--</div>
+      <div class="sub">USD</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Today Cost</div>
+      <div class="value" id="todayCost">--</div>
+      <div class="sub" id="todayCostSub">Current day</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Input Tokens</div>
+      <div class="value" id="inputTokens">--</div>
+      <div class="sub">Total processed</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Output Tokens</div>
+      <div class="value" id="outputTokens">--</div>
+      <div class="sub">Total generated</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Avg Latency</div>
+      <div class="value" id="avgLatency">--</div>
+      <div class="sub">milliseconds</div>
+    </div>
+  </div>
+
+  <!-- 图表区域 -->
+  <div class="charts-grid">
+    <div class="chart-card">
+      <h3>Daily Cost Trend (30 days)</h3>
+      <div class="chart-wrap"><canvas id="dailyChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>Cost by Model</h3>
+      <div class="chart-wrap"><canvas id="modelChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="charts-grid">
+    <div class="chart-card">
+      <h3>Hourly Activity (24h)</h3>
+      <div class="chart-wrap"><canvas id="hourlyChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>Token Distribution</h3>
+      <div class="chart-wrap"><canvas id="tokenChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- 调用记录表 -->
+  <div class="table-card">
+    <h3>Recent API Calls</h3>
+    <div style="overflow-x:auto">
+      <table>
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Mode</th>
+            <th>Provider</th>
+            <th>Model</th>
+            <th>Input</th>
+            <th>Output</th>
+            <th>Cost</th>
+            <th>Latency</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="callsBody">
+          <tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text-muted)">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 模型统计表 -->
+  <div class="table-card">
+    <h3>Model Statistics</h3>
+    <div style="overflow-x:auto">
+      <table>
+        <thead>
+          <tr>
+            <th>Provider</th>
+            <th>Model</th>
+            <th>Calls</th>
+            <th>Input Tokens</th>
+            <th>Output Tokens</th>
+            <th>Total Cost</th>
+            <th>Avg Latency</th>
+          </tr>
+        </thead>
+        <tbody id="modelsBody">
+          <tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text-muted)">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="footer">Model Monitor v1.0.0 -- Unified API Monitoring Tool</div>
+
+<script>
+const API = '/api';
+const chartDefaults = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {legend: {labels: {color: '#94a3b8', font: {size: 11}}}},
+  scales: {
+    x: {ticks: {color: '#64748b'}, grid: {color: '#1e293b'}},
+    y: {ticks: {color: '#64748b'}, grid: {color: '#1e293b'}}
+  }
+};
+
+let dailyChartInst, modelChartInst, hourlyChartInst, tokenChartInst;
+
+function fmt(n, d=0) {
+  if (n == null) return '--';
+  return Number(n).toLocaleString('en-US', {minimumFractionDigits: d, maximumFractionDigits: d});
+}
+
+function fmtCost(n) {
+  if (n == null) return '--';
+  return '$' + Number(n).toFixed(4);
+}
+
+async function fetchJSON(path) {
+  const res = await fetch(API + path);
+  const data = await res.json();
+  return data.data || data;
+}
+
+async function loadStats() {
+  const s = await fetchJSON('/stats');
+  document.getElementById('totalCalls').textContent = fmt(s.total_calls);
+  document.getElementById('totalCost').textContent = fmtCost(s.total_cost);
+  document.getElementById('todayCost').textContent = fmtCost(s.today_cost);
+  document.getElementById('inputTokens').textContent = fmt(s.total_input_tokens);
+  document.getElementById('outputTokens').textContent = fmt(s.total_output_tokens);
+  document.getElementById('avgLatency').textContent = fmt(s.avg_latency_ms, 1) + 'ms';
+  document.getElementById('statusText').textContent = 'Connected -- Last update: ' + new Date().toLocaleTimeString();
+}
+
+async function loadDaily() {
+  const data = await fetchJSON('/daily?days=30');
+  const labels = data.map(d => d.date);
+  const costs = data.map(d => d.cost || 0);
+  const calls = data.map(d => d.calls || 0);
+
+  if (dailyChartInst) dailyChartInst.destroy();
+  dailyChartInst = new Chart(document.getElementById('dailyChart'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        {label: 'Cost ($)', data: costs, backgroundColor: 'rgba(59,130,246,.6)', borderRadius: 4, yAxisID: 'y'},
+        {label: 'Calls', data: calls, type: 'line', borderColor: '#10b981', backgroundColor: 'transparent', pointRadius: 3, yAxisID: 'y1'}
+      ]
+    },
+    options: {
+      ...chartDefaults,
+      scales: {
+        ...chartDefaults.scales,
+        y: {...chartDefaults.scales.y, position: 'left'},
+        y1: {...chartDefaults.scales.y, position: 'right', grid: {drawOnChartArea: false}}
+      }
+    }
+  });
+}
+
+async function loadModels() {
+  const data = await fetchJSON('/models');
+
+  // 模型费用饼图
+  const labels = data.map(m => m.model || 'unknown');
+  const costs = data.map(m => m.cost || 0);
+  const colors = ['#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899','#14b8a6','#f97316'];
+
+  if (modelChartInst) modelChartInst.destroy();
+  modelChartInst = new Chart(document.getElementById('modelChart'), {
+    type: 'doughnut',
+    data: {
+      labels,
+      datasets: [{data: costs, backgroundColor: colors.slice(0, data.length), borderWidth: 0}]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {position: 'bottom', labels: {color: '#94a3b8', padding: 12, font: {size: 11}}},
+        tooltip: {callbacks: {label: ctx => ctx.label + ': $' + (ctx.parsed || 0).toFixed(4)}}
+      }
+    }
+  });
+
+  // 模型统计表
+  const tbody = document.getElementById('modelsBody');
+  tbody.innerHTML = data.length ? data.map(m => `<tr>
+    <td>${m.provider}</td><td>${m.model}</td><td>${fmt(m.calls)}</td>
+    <td>${fmt(m.input_tokens)}</td><td>${fmt(m.output_tokens)}</td>
+    <td>${fmtCost(m.cost)}</td><td>${fmt(m.avg_latency_ms,1)}ms</td>
+  </tr>`).join('') : '<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text-muted)">No data</td></tr>';
+}
+
+async function loadHourly() {
+  const data = await fetchJSON('/hourly?hours=24');
+  const labels = data.map(h => h.hour ? h.hour.split(' ')[1] || h.hour : '');
+  const costs = data.map(h => h.cost || 0);
+  const calls = data.map(h => h.calls || 0);
+
+  if (hourlyChartInst) hourlyChartInst.destroy();
+  hourlyChartInst = new Chart(document.getElementById('hourlyChart'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        {label: 'Cost ($)', data: costs, borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,.1)', fill: true, tension: .4}
+      ]
+    },
+    options: chartDefaults
+  });
+
+  // Token 分布图
+  const inputTotal = data.reduce((s, h) => s + (h.input_tokens || 0), 0);
+  const outputTotal = data.reduce((s, h) => s + (h.output_tokens || 0), 0);
+
+  if (tokenChartInst) tokenChartInst.destroy();
+  tokenChartInst = new Chart(document.getElementById('tokenChart'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Input Tokens', 'Output Tokens'],
+      datasets: [{data: [inputTotal, outputTotal], backgroundColor: ['#3b82f6', '#10b981'], borderWidth: 0}]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {legend: {position: 'bottom', labels: {color: '#94a3b8', padding: 12, font: {size: 11}}}}
+    }
+  });
+}
+
+async function loadCalls() {
+  const data = await fetchJSON('/calls?limit=50');
+  const tbody = document.getElementById('callsBody');
+  if (!data || !data.length) {
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text-muted)">No data</td></tr>';
+    return;
+  }
+  tbody.innerHTML = data.map(c => `<tr>
+    <td>${c.timestamp || '--'}</td>
+    <td><span class="badge badge-${c.mode || 'proxy'}">${c.mode || '--'}</span></td>
+    <td>${c.provider || '--'}</td>
+    <td>${c.model || '--'}</td>
+    <td>${fmt(c.input_tokens)}</td>
+    <td>${fmt(c.output_tokens)}</td>
+    <td>${fmtCost(c.cost)}</td>
+    <td>${fmt(c.latency_ms,1)}ms</td>
+    <td>${c.status_code || '--'}</td>
+  </tr>`).join('');
+}
+
+async function refresh() {
+  await Promise.all([loadStats(), loadDaily(), loadModels(), loadHourly(), loadCalls()]);
+}
+
+// 初始化
+refresh();
+// 每30秒自动刷新
+setInterval(refresh, 30000);
+</script>
+</body>
+</html>

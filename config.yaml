@@ -1,0 +1,44 @@
+# 模型监控工具 - 默认配置
+# 所有选项均可通过环境变量覆盖，格式: MM_<SECTION>_<KEY>
+
+mode: proxy  # proxy | sniffer
+
+proxy:
+  host: 0.0.0.0
+  port: 8080
+  timeout: 120
+
+sniffer:
+  port: 8080
+  targets:
+    - api.deepseek.com
+    - openrouter.ai
+
+web:
+  host: 0.0.0.0
+  port: 8000
+
+database:
+  path: data/usage.db
+
+providers:
+  deepseek:
+    base_url: https://api.deepseek.com
+    api_key: ${DEEPSEEK_API_KEY}
+    pricing:
+      deepseek-chat:
+        input: 1.0
+        output: 2.0
+      deepseek-reasoner:
+        input: 4.0
+        output: 16.0
+  openrouter:
+    base_url: https://openrouter.ai/api
+    api_key: ${OPENROUTER_API_KEY}
+    pricing: {}
+
+alerts:
+  enabled: false
+  daily_threshold: 10.0
+  monthly_threshold: 200.0
+  webhook_url: ""

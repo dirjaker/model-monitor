@@ -116,9 +116,12 @@ class GenericAdapter(BaseAdapter):
 
 def get_adapter(provider_name: str, config: dict[str, Any]) -> BaseAdapter:
     """根据提供商名称获取适配器"""
+    from .adapters_mimo import MiMoAdapter
+
     adapters: dict[str, type[BaseAdapter]] = {
         "deepseek": DeepSeekAdapter,
         "openrouter": OpenRouterAdapter,
+        "mimo": MiMoAdapter,
     }
     adapter_cls = adapters.get(provider_name, GenericAdapter)
     if adapter_cls is GenericAdapter:

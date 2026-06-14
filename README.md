@@ -35,7 +35,9 @@ Unified API monitoring tool for tracking token usage, costs, and latency across 
 - **TUI**: Rich terminal dashboard with real-time updates
 - **macOS App**: Native tkinter GUI with start/stop controls
 - **Analysis**: Cost optimization suggestions, linear regression predictions, threshold alerts
-- **Multi-Provider**: DeepSeek, OpenRouter, extensible adapter system
+- **Multi-Provider**: DeepSeek, OpenRouter, MiMo (via OpenRouter), extensible adapter system
+- **Multi-Account**: Support multiple API keys and provider accounts
+- **Webhook Alerts**: Configurable webhook notifications (DingTalk, Feishu, WeCom)
 
 ## Requirements
 

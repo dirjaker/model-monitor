@@ -19,12 +19,17 @@
 
 | 功能 | 描述 |
 |------|------|
-| 🔌 **多协议适配** | 支持 OpenAI、DeepSeek、MiMo 等多种 API 格式 |
-| 📊 **实时流量** | 实时监控 API 请求量、延迟、错误率 |
-| 💰 **费用追踪** | 按模型、按 Key 统计 Token 消耗和费用 |
-| 🔔 **告警通知** | 阈值告警，支持 Webhook 通知 |
-| 📈 **Web 仪表盘** | 直观的可视化监控面板 |
-| 🖥️ **TUI 终端** | 终端风格的实时监控界面 |
+| 🔌 **多协议适配** | 支持 OpenAI、DeepSeek、OpenRouter、MiMo 等多种 API 格式 |
+| 📊 **实时流量** | 实时监控 API 请求量、延迟、错误率，支持流式与非流式请求 |
+| 💰 **费用追踪** | 按模型、按 Key 统计 Token 消耗和费用，支持每日/每月汇总 |
+| 🔔 **阈值告警** | 日/月费用阈值告警，支持 Webhook 通知（飞书、Slack 等） |
+| 📈 **费用预测** | 基于历史数据的线性回归费用预测，提供趋势分析 |
+| 💡 **优化建议** | 自动分析使用模式，提供降本增效建议 |
+| 🌐 **Web 仪表盘** | FastAPI + Vue.js 可视化监控面板，含 REST API 文档 |
+| 🖥️ **TUI 终端** | Rich 驱动的终端实时监控界面 |
+| 🍎 **macOS 原生** | macOS 菜单栏集成与原生 GUI（py2app 打包） |
+| 🔄 **双模式运行** | 代理模式（HTTP Proxy）和嗅探模式（mitmproxy）灵活切换 |
+| 📦 **多账户管理** | 支持多 API Key 账户管理，余额检查 |
 
 
 ## 🚀 快速开始
@@ -41,8 +46,20 @@ conda activate model-monitor
 # 安装依赖
 pip install -r requirements.txt
 
-# 运行项目
-python main.py
+# 运行项目（默认代理模式）
+python main.py proxy
+```
+
+### 命令行用法
+
+```bash
+python main.py proxy          # HTTP 代理模式
+python main.py sniffer        # mitmproxy 嗅探模式
+python main.py web            # Web 仪表盘
+python main.py tui            # 终端界面
+python main.py stats          # 查看统计
+python main.py export -o data.json  # 导出数据
+python main.py config --show  # 查看配置
 ```
 
 ### 访问地址
@@ -50,28 +67,51 @@ python main.py
 | 服务 | 地址 |
 |------|------|
 | 🌐 Web 仪表盘 | http://localhost:8000 |
-| 📡 API 文档 | http://localhost:8000/docs |
-| 🖥️ TUI 终端 | `python -m src.tui` |
+| 📡 API 文档 | http://localhost:8000/api/docs |
+| 🖥️ TUI 终端 | `python main.py tui` |
 
 ## 🛠️ 技术栈
 
 | 层级 | 技术 |
 |------|------|
-| **后端** | FastAPI, SQLAlchemy |
+| **后端** | FastAPI, SQLAlchemy, uvicorn |
 | **前端** | Vue.js, ECharts |
-| **代理** | Python, httpx |
-| **通知** | Webhook |
+| **代理** | httpx (异步 HTTP/2), mitmproxy |
+| **数据库** | SQLite (WAL 模式) |
+| **终端** | Rich |
+| **通知** | Webhook (httpx) |
 
-## 📝 开发日志
+## 📁 项目结构
 
-- [x] 多协议适配器
-- [x] 流量分析引擎
-- [x] 费用追踪系统
-- [x] Web 仪表盘
-- [x] TUI 终端
-- [ ] macOS 菜单栏
-- [ ] 分布式部署
-- [ ] 更多模型支持
+```
+model-monitor/
+├── main.py                  # 统一入口
+├── src/
+│   ├── cli.py               # 命令行界面
+│   ├── config.py            # YAML 配置管理
+│   ├── database.py          # SQLite 数据库
+│   ├── proxy/               # HTTP 代理服务器
+│   │   ├── server.py        #   异步代理 (FastAPI + httpx)
+│   │   ├── adapters.py      #   多提供商适配器
+│   │   └── adapters_mimo.py #   MiMo 适配器
+│   ├── sniffer/             # mitmproxy 嗅探
+│   │   ├── mitm.py          #   嗅探插件
+│   │   └── cert.py          #   CA 证书管理
+│   ├── web/                 # Web 仪表盘
+│   │   ├── app.py           #   FastAPI 应用
+│   │   ├── api.py           #   REST API 路由
+│   │   └── static/          #   前端静态文件
+│   ├── analysis/            # 智能分析
+│   │   ├── alerts.py        #   阈值告警
+│   │   ├── predictor.py     #   费用预测
+│   │   └── optimizer.py     #   成本优化建议
+│   ├── tui/                 # Rich 终端界面
+│   ├── macos/               # macOS 原生集成
+│   └── accounts/            # 多账户管理
+├── config.yaml              # 配置文件
+├── docs/                    # 文档
+└── packaging/               # 打包脚本
+```
 
 ## 📄 许可证
 

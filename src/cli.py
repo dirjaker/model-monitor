@@ -108,6 +108,22 @@ def cmd_tui(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_widget(args: argparse.Namespace) -> int:
+    """启动紧凑小组件"""
+    from src.config import Config
+    from src.database import Database
+    from src.tui.widget import WidgetApp
+
+    config = Config(args.config)
+    db = Database(config.db_path)
+    widget = WidgetApp(config, db)
+    try:
+        widget.run()
+    except KeyboardInterrupt:
+        pass
+    return 0
+
+
 def cmd_app(args: argparse.Namespace) -> int:
     """启动 macOS 图形界面"""
     if sys.platform != "darwin":
@@ -240,6 +256,10 @@ def build_parser() -> argparse.ArgumentParser:
     # tui
     p_tui = subparsers.add_parser("tui", help="启动终端界面")
     p_tui.set_defaults(func=cmd_tui)
+
+    # widget
+    p_widget = subparsers.add_parser("widget", help="启动紧凑小组件")
+    p_widget.set_defaults(func=cmd_widget)
 
     # app
     p_app = subparsers.add_parser("app", help="启动图形界面 (仅 macOS)")

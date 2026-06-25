@@ -124,6 +124,17 @@ def cmd_widget(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_desktop(args: argparse.Namespace) -> int:
+    """启动桌面小组件"""
+    from src.config import Config
+    from src.database import Database
+    from src.widget import run_desktop_widget
+
+    config = Config(args.config)
+    db = Database(config.db_path)
+    return run_desktop_widget(config, db)
+
+
 def cmd_app(args: argparse.Namespace) -> int:
     """启动 macOS 图形界面"""
     if sys.platform != "darwin":
@@ -260,6 +271,10 @@ def build_parser() -> argparse.ArgumentParser:
     # widget
     p_widget = subparsers.add_parser("widget", help="启动紧凑小组件")
     p_widget.set_defaults(func=cmd_widget)
+
+    # desktop
+    p_desktop = subparsers.add_parser("desktop", help="启动桌面小组件 (PySide6)")
+    p_desktop.set_defaults(func=cmd_desktop)
 
     # app
     p_app = subparsers.add_parser("app", help="启动图形界面 (仅 macOS)")

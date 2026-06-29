@@ -40,7 +40,7 @@ class ProxyServer:
             self._client = httpx.AsyncClient(
                 timeout=httpx.Timeout(self._config.proxy_timeout, connect=30),
                 follow_redirects=True,
-                http2=True,
+                http2=False,
             )
             logger.info("代理客户端已初始化")
 
@@ -77,8 +77,8 @@ class ProxyServer:
         # 构建请求头
         headers = dict(request.headers)
         headers.pop("host", None)
-        # 传递 API key
-        if adapter.api_key:
+        # 传递 API key — 仅当请求本身没有 Authorization 时才补充
+        if "authorization" not in headers and adapter.api_key:
             headers["authorization"] = f"Bearer {adapter.api_key}"
 
         # 读取请求体
@@ -105,7 +105,7 @@ class ProxyServer:
                 )
             else:
                 return await self._handle_normal(
-                    request, upstream_url, headers, body, adapter, parsed_body, start_time
+                    request, upstream_url, headers, body, adapter, parsed_body, start_time, request_body_str
                 )
         except httpx.ConnectError as e:
             logger.error("连接上游失败: %s", e)
@@ -126,6 +126,7 @@ class ProxyServer:
         adapter: DeepSeekAdapter,
         parsed_body: dict[str, Any],
         start_time: float,
+        request_body_str: str = "",
     ) -> Response:
         """处理普通 (非流式) 请求"""
         assert self._client is not None
@@ -147,33 +148,36 @@ class ProxyServer:
         output_tok = usage.get("output_tokens", 0)
         call_cost = adapter.calculate_cost(model, input_tok, output_tok)
 
-        # 记录到数据库
-        self._db.record_call(
-            mode="proxy",
-            provider=adapter.provider_name,
-            model=model,
-            input_tokens=input_tok,
-            output_tokens=output_tok,
-            cost=call_cost,
-            latency_ms=latency_ms,
-            status_code=resp.status_code,
-            endpoint=str(request.url.path),
-            request_body=request_body_str[:2000],
-            response_body=response_body.decode("utf-8", errors="replace")[:2000],
-        )
+        # 仅记录成功的聊天补全请求，过滤掉探测/健康检查/失败等无关请求
+        is_chat = "/chat/completions" in str(request.url.path)
+        if is_chat and resp.status_code < 400:
+            # 记录到数据库
+            self._db.record_call(
+                mode="proxy",
+                provider=adapter.provider_name,
+                model=model,
+                input_tokens=input_tok,
+                output_tokens=output_tok,
+                cost=call_cost,
+                latency_ms=latency_ms,
+                status_code=resp.status_code,
+                endpoint=str(request.url.path),
+                request_body=request_body_str[:2000],
+                response_body=response_body.decode("utf-8", errors="replace")[:2000],
+            )
 
-        # 发布实时事件
-        event_bus.publish(ApiCallEvent(
-            mode="proxy",
-            provider=adapter.provider_name,
-            model=model,
-            input_tokens=input_tok,
-            output_tokens=output_tok,
-            cost=call_cost,
-            latency_ms=latency_ms,
-            status_code=resp.status_code,
-            endpoint=str(request.url.path),
-        ).to_dict())
+            # 发布实时事件
+            event_bus.publish(ApiCallEvent(
+                mode="proxy",
+                provider=adapter.provider_name,
+                model=model,
+                input_tokens=input_tok,
+                output_tokens=output_tok,
+                cost=call_cost,
+                latency_ms=latency_ms,
+                status_code=resp.status_code,
+                endpoint=str(request.url.path),
+            ).to_dict())
 
         # 返回响应
         resp_headers = dict(resp.headers)
@@ -224,30 +228,33 @@ class ProxyServer:
             output_tok = usage.get("output_tokens", 0)
             call_cost = adapter.calculate_cost(model, input_tok, output_tok)
 
-            self._db.record_call(
-                mode="proxy",
-                provider=adapter.provider_name,
-                model=model,
-                input_tokens=input_tok,
-                output_tokens=output_tok,
-                cost=call_cost,
-                latency_ms=latency_ms,
-                status_code=200,
-                endpoint=str(request.url.path),
-            )
+            # 仅记录聊天补全请求
+            is_chat = "/chat/completions" in str(request.url.path)
+            if is_chat:
+                self._db.record_call(
+                    mode="proxy",
+                    provider=adapter.provider_name,
+                    model=model,
+                    input_tokens=input_tok,
+                    output_tokens=output_tok,
+                    cost=call_cost,
+                    latency_ms=latency_ms,
+                    status_code=200,
+                    endpoint=str(request.url.path),
+                )
 
-            # 发布实时事件
-            event_bus.publish(ApiCallEvent(
-                mode="proxy",
-                provider=adapter.provider_name,
-                model=model,
-                input_tokens=input_tok,
-                output_tokens=output_tok,
-                cost=call_cost,
-                latency_ms=latency_ms,
-                status_code=200,
-                endpoint=str(request.url.path),
-            ).to_dict())
+                # 发布实时事件
+                event_bus.publish(ApiCallEvent(
+                    mode="proxy",
+                    provider=adapter.provider_name,
+                    model=model,
+                    input_tokens=input_tok,
+                    output_tokens=output_tok,
+                    cost=call_cost,
+                    latency_ms=latency_ms,
+                    status_code=200,
+                    endpoint=str(request.url.path),
+                ).to_dict())
 
         return StreamingResponse(
             stream_generator(),

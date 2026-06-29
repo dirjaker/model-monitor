@@ -1,8 +1,9 @@
 mode: proxy
 proxy:
-  host: 0.0.0.0
-  port: 8080
+  host: 127.0.0.1
+  port: 12345
   timeout: 120
+  target: https://api.deepseek.com
 sniffer:
   port: 8080
   targets:
@@ -15,7 +16,7 @@ database:
 providers:
   deepseek:
     base_url: https://api.deepseek.com
-    api_key: ''
+    api_key: 'REDACTED_DEEPSEEK_KEY'
     pricing:
       deepseek-chat:
         input: 1.0
@@ -32,6 +33,6 @@ providers:
 alerts:
   enabled: false
   daily_threshold: 10.0
-  monthly_threshold: 200.0
+  monthly_threshold: 100.0
   webhook_url: ''
   webhook_headers: {}

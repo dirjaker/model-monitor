@@ -103,7 +103,7 @@ class Config:
     def _defaults(self) -> dict[str, Any]:
         return {
             "mode": "proxy",
-            "proxy": {"host": "0.0.0.0", "port": 8080, "timeout": 120},
+            "proxy": {"host": "127.0.0.1", "port": 12345, "timeout": 120},
             "sniffer": {"port": 8080, "targets": ["api.deepseek.com", "openrouter.ai"]},
             "web": {"host": "0.0.0.0", "port": 8000},
             "database": {"path": "data/usage.db"},
@@ -145,11 +145,11 @@ class Config:
 
     @property
     def proxy_host(self) -> str:
-        return str(self.get("proxy.host", "0.0.0.0"))
+        return str(self.get("proxy.host", "127.0.0.1"))
 
     @property
     def proxy_port(self) -> int:
-        return int(self.get("proxy.port", 8080))
+        return int(self.get("proxy.port", 12345))
 
     @property
     def proxy_timeout(self) -> int:

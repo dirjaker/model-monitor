@@ -128,7 +128,7 @@ class Database:
                     """INSERT INTO api_calls
                     (timestamp, mode, provider, model, input_tokens, output_tokens,
                      cost, latency_ms, status_code, endpoint, request_body, response_body)
-                    VALUES (datetime('now'), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                    VALUES (datetime('now', 'localtime'), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                     (mode, provider, model, input_tokens, output_tokens,
                      cost, latency_ms, status_code, endpoint, request_body, response_body),
                 )

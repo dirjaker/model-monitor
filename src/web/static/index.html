@@ -3,291 +3,339 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Model Monitor · 监控面板</title>
+<title>Model Monitor</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 
-/* ── Theme: Stripe (default) ── */
-[data-theme="stripe"],:root{
-  --bg:#f6f9fc;--sf:#ffffff;--ink:#061b31;--dim:#64748d;--mt:#94a3b8;
-  --ac:#533afd;--ac-h:#4434d4;--ac-15:rgba(83,58,253,.15);--ac-6:rgba(83,58,253,.06);
-  --gr:#15be53;--gr-12:rgba(21,190,83,.12);--gd:#c49a2a;--gd-12:rgba(196,154,42,.12);
-  --rd:#ea2261;--rd-10:rgba(234,34,97,.1);--te:#14b8a6;--te-10:rgba(20,184,166,.1);
-  --bd:#e5edf5;--bdf:#f0f4f8;--ff:'Inter',system-ui,-apple-system,sans-serif;
+/* ── Glass design tokens — DeepSeek Blue ── */
+:root{
+  --glass-bg:rgba(255,255,255,.5);
+  --glass-border:rgba(255,255,255,.65);
+  --glass-shadow:inset 0 1px 0 rgba(255,255,255,.5), 0 8px 32px rgba(0,0,0,.05);
+  --glass-blur:blur(18px);
+  --ink:#0f1a2e;
+  --ink-dim:#4a5a78;
+  --ink-muted:#7a8aa5;
+  --accent:#4a6cf7;
+  --accent-15:rgba(74,108,247,.15);
+  --accent-6:rgba(74,108,247,.06);
+  --gr:#0ea57e;
+  --gr-12:rgba(14,165,126,.12);
+  --gd:#e8a838;
+  --gd-12:rgba(232,168,56,.12);
+  --rd:#e06050;
+  --rd-10:rgba(224,96,80,.1);
+  --te:#0891b2;
+  --te-10:rgba(8,145,178,.1);
+  --ff:'Inter',system-ui,-apple-system,sans-serif;
   --mo:'SF Mono','JetBrains Mono',ui-monospace,monospace;
-}
-/* ── Theme: Dark ── */
-[data-theme="dark"]{
-  --bg:#0a0e17;--sf:#111827;--ink:#e8edf5;--dim:#94a3b8;--mt:#64748b;
-  --ac:#3b82f6;--ac-h:#2563eb;--ac-15:rgba(59,130,246,.18);--ac-6:rgba(59,130,246,.08);
-  --gr:#10b981;--gr-12:rgba(16,185,129,.15);--gd:#f59e0b;--gd-12:rgba(245,158,11,.15);
-  --rd:#ef4444;--rd-10:rgba(239,68,68,.12);--te:#14b8a6;--te-10:rgba(20,184,166,.12);
-  --bd:#1e293b;--bdf:#1e293b;
-}
-/* ── Theme: DeepBlue ── */
-[data-theme="deepblue"]{
-  --bg:#0a1028;--sf:#0f1a3a;--ink:#d6e8ff;--dim:#7b9cd4;--mt:#4a6a9a;
-  --ac:#60a5fa;--ac-h:#3b82f6;--ac-15:rgba(96,165,250,.15);--ac-6:rgba(96,165,250,.06);
-  --gr:#4ade80;--gr-12:rgba(74,222,128,.12);--gd:#facc15;--gd-12:rgba(250,204,21,.12);
-  --rd:#fb7185;--rd-10:rgba(251,113,133,.1);--te:#5eead4;--te-10:rgba(94,234,212,.1);
-  --bd:#1e2a50;--bdf:#1e2a50;
-}
-/* ── Theme: Dusk ── */
-[data-theme="dusk"]{
-  --bg:#1a1220;--sf:#241a30;--ink:#f0dce8;--dim:#b08aab;--mt:#7a5a72;
-  --ac:#c084fc;--ac-h:#a855f7;--ac-15:rgba(192,132,252,.15);--ac-6:rgba(192,132,252,.06);
-  --gr:#a7f3d0;--gr-12:rgba(167,243,208,.12);--gd:#fde68a;--gd-12:rgba(253,230,138,.12);
-  --rd:#fca5a5;--rd-10:rgba(252,165,165,.1);--te:#5eead4;--te-10:rgba(94,234,212,.1);
-  --bd:#3a2a48;--bdf:#3a2a48;
-}
-/* ── Theme: Moonlight ── */
-[data-theme="moonlight"]{
-  --bg:#14141f;--sf:#1c1c2e;--ink:#dcdcf0;--dim:#8d8db0;--mt:#5a5a78;
-  --ac:#a78bfa;--ac-h:#8b5cf6;--ac-15:rgba(167,139,250,.15);--ac-6:rgba(167,139,250,.06);
-  --gr:#6ee7b7;--gr-12:rgba(110,231,183,.12);--gd:#fbbf24;--gd-12:rgba(251,191,36,.12);
-  --rd:#f87171;--rd-10:rgba(248,113,113,.1);--te:#5eead4;--te-10:rgba(94,234,212,.1);
-  --bd:#2a2a42;--bdf:#2a2a42;
 }
 
 html{font-size:14px;-webkit-font-smoothing:antialiased}
 body{
   font-family:var(--ff);
-  background:var(--bg);color:var(--ink);
-  line-height:1.5;min-height:100vh;font-weight:400;
-  transition:background .25s,color .25s;
+  background:linear-gradient(145deg,#eef2fb 0%,#e2e8f5 40%,#eef2fb 100%);
+  color:var(--ink);line-height:1.5;min-height:100vh;font-weight:400;
+  background-attachment:fixed;
 }
-::-webkit-scrollbar{width:3px;height:3px}
-::-webkit-scrollbar-thumb{background:var(--mt);border-radius:2px}
 
-/* ── Topbar ── */
+/* ── Ambient orbs ── */
+body::before,body::after{
+  content:'';position:fixed;border-radius:50%;pointer-events:none;z-index:0;
+}
+body::before{
+  width:600px;height:600px;
+  background:radial-gradient(circle,rgba(74,108,247,.08),transparent 70%);
+  top:-200px;right:-100px;
+}
+body::after{
+  width:500px;height:500px;
+  background:radial-gradient(circle,rgba(14,165,126,.06),transparent 70%);
+  bottom:-150px;left:-100px;
+}
+
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-thumb{background:var(--ink-muted);border-radius:2px}
+
+/* ── Glass mixin ── */
+.glass{
+  background:var(--glass-bg);
+  backdrop-filter:var(--glass-blur);
+  -webkit-backdrop-filter:var(--glass-blur);
+  border:1px solid var(--glass-border);
+  box-shadow:var(--glass-shadow);
+}
+
+/* ── Top Bar ── */
 .tp{
-  background:var(--sf);border-bottom:1px solid var(--bd);
-  padding:0 32px;height:52px;
+  position:sticky;top:0;z-index:100;
+  padding:0 32px;height:56px;
   display:flex;align-items:center;justify-content:space-between;
-  transition:background .25s,border-color .25s;
 }
-.tp-l{display:flex;align-items:center;gap:10px}
+.tp::after{
+  content:'';position:absolute;inset:0;z-index:-1;
+  background:rgba(255,255,255,.5);
+  backdrop-filter:blur(24px);
+  -webkit-backdrop-filter:blur(24px);
+  border-bottom:1px solid rgba(255,255,255,.6);
+}
+.tp-l{display:flex;align-items:center;gap:10px;position:relative;z-index:1}
 .tp-m{
-  width:28px;height:28px;border-radius:5px;
-  background:var(--ac);display:flex;align-items:center;justify-content:center;
-  color:#fff;font-size:12px;font-weight:600;transition:background .25s;
-}
-.tp h1{font-size:14px;font-weight:500;color:var(--ink)}
-.tp h1 span{color:var(--dim);font-weight:400}
-.tp-r{display:flex;align-items:center;gap:14px;font-size:12px;color:var(--dim);font-weight:400}
-.tp-dot{width:5px;height:5px;border-radius:50%;background:var(--gr);display:inline-block;vertical-align:middle;margin-right:4px}
-.tp-dot.off{background:var(--mt)}
-.tp-gear{
-  width:28px;height:28px;border-radius:5px;
+  width:32px;height:32px;border-radius:8px;
+  background:linear-gradient(135deg,var(--accent),#7a94ff);
   display:flex;align-items:center;justify-content:center;
-  cursor:pointer;font-size:14px;color:var(--mt);
-  transition:background .15s,color .15s;
-  border:none;background:none;
+  color:#fff;font-size:14px;font-weight:700;box-shadow:0 2px 10px rgba(74,108,247,.35);
 }
-.tp-gear:hover{background:var(--bd);color:var(--dim)}
+.tp h1{font-size:14px;font-weight:600;color:var(--ink);letter-spacing:-.2px}
+.tp-r{display:flex;align-items:center;gap:18px;position:relative;z-index:1}
+.tp-r .item{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink-dim);font-weight:500}
+.tp-dot{
+  width:8px;height:8px;border-radius:50%;background:var(--gr);display:inline-block;
+  box-shadow:0 0 6px rgba(14,165,126,.4);
+}
+.tp-dot.off{background:var(--ink-muted);box-shadow:none}
+.tp-gear{
+  width:34px;height:34px;border-radius:9px;border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;background:rgba(255,255,255,.5);color:var(--ink-dim);
+  backdrop-filter:blur(8px);transition:background .15s,color .15s,transform .15s;
+}
+.tp-gear:hover{background:rgba(255,255,255,.8);color:var(--ink);transform:scale(1.05)}
 
 /* ── Layout ── */
-.mx{max-width:1080px;margin:0 auto;padding:36px 32px 48px;transition:padding .25s}
-.hd{margin-bottom:28px}
-.hd h2{font-size:28px;font-weight:500;letter-spacing:-.5px;color:var(--ink)}
-.hd p{font-size:13px;color:var(--dim);margin-top:3px}
+.mx{max-width:1080px;margin:0 auto;padding:28px 32px 48px;position:relative;z-index:1}
+
+/* ── Mode Status Banner ── */
+.mode-bnr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 18px;margin-bottom:24px;border-radius:12px;
+}
+.mode-bnr-left{display:flex;align-items:center;gap:10px}
+.mode-bnr-icon{
+  width:34px;height:34px;border-radius:9px;
+  display:flex;align-items:center;justify-content:center;font-size:16px;
+}
+.mode-bnr-icon.sniff{background:var(--te-10);color:var(--te)}
+.mode-bnr-icon.proxy{background:var(--accent-6);color:var(--accent)}
+.mode-bnr-info{}
+.mode-bnr-info .name{font-size:13px;font-weight:600;color:var(--ink)}
+.mode-bnr-info .desc{font-size:11px;color:var(--ink-dim);margin-top:1px}
+.mode-bnr-right{display:flex;align-items:center;gap:10px}
+.mode-bnr .pill{
+  font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;
+  padding:3px 12px;border-radius:999px;
+}
+.mode-bnr .pill.on{background:var(--gr-12);color:var(--gr)}
+.mode-bnr .pill.off{background:var(--rd-10);color:var(--rd)}
+.mode-bnr-btn{
+  padding:6px 18px;border-radius:8px;border:none;cursor:pointer;
+  font-family:var(--ff);font-size:13px;font-weight:600;
+  background:var(--accent);color:#fff;
+  transition:background .15s,transform .15s,box-shadow .15s;
+}
+.mode-bnr-btn:hover{background:#3d5de0;box-shadow:0 4px 12px rgba(74,108,247,.25);transform:translateY(-1px)}
+.mode-bnr-btn:active{transform:translateY(0)}
+.mode-bnr-btn.stop{background:var(--rd);color:#fff}
+.mode-bnr-btn.stop:hover{background:#c85040}
+
+/* ── Heading ── */
+.hd{margin-bottom:24px}
+.hd h2{font-size:22px;font-weight:600;letter-spacing:-.4px;color:var(--ink)}
+.hd p{font-size:13px;color:var(--ink-dim);margin-top:2px}
 
 /* ── Metrics ── */
-.rw{display:grid;gap:8px;margin-bottom:24px}
+.rw{display:grid;gap:8px;margin-bottom:20px}
 .r6{grid-template-columns:repeat(6,1fr)}
 .mc{
-  background:var(--sf);border:1px solid var(--bd);border-radius:6px;
-  padding:14px 16px;
-  transition:box-shadow .15s,border-color .25s,background .25s;
+  padding:14px 16px;border-radius:10px;
+  transition:box-shadow .2s,transform .15s;
 }
-.mc:hover{border-color:var(--ac-15);box-shadow:rgba(50,50,93,.08) 0px 6px 12px -2px,rgba(0,0,0,.04) 0px 3px 7px -3px}
-.mc-l{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.7px;color:var(--mt);margin-bottom:4px}
+.mc:hover{box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 12px 40px rgba(0,0,0,.08);transform:translateY(-1px)}
+.mc-l{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.7px;color:var(--ink-muted);margin-bottom:4px}
 .mc-v{font-size:22px;font-weight:600;letter-spacing:-.3px;color:var(--ink);line-height:1.15}
-.mc-s{font-size:11px;color:var(--dim);margin-top:2px}
-.mc-v.c1{color:var(--ac)}
-.mc-v.c2{color:var(--gd)}
-.mc-v.c3{color:var(--te)}
-.mc-v.c4{color:var(--gr)}
+.mc-s{font-size:11px;color:var(--ink-dim);margin-top:2px}
+.mc-v.c1{color:var(--accent)}.mc-v.c2{color:var(--gd)}.mc-v.c3{color:var(--te)}.mc-v.c4{color:var(--gr)}
 
 /* ── Sections ── */
 .sh{display:flex;align-items:center;gap:12px;margin-bottom:14px}
-.sh:after{content:'';flex:1;height:1px;background:var(--bd);transition:background .25s}
-.sh h3{font-size:13px;font-weight:500;color:var(--dim);letter-spacing:.2px}
-
-/* ── Charts ── */
+.sh:after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(0,0,0,.06),transparent)}
+.sh h3{font-size:12px;font-weight:500;color:var(--ink-dim);letter-spacing:.3px}
 .g2{display:grid;grid-template-columns:1.5fr 1fr;gap:8px;margin-bottom:20px}
-.gc{
-  background:var(--sf);border:1px solid var(--bd);border-radius:6px;
-  padding:18px 20px;
-  transition:border-color .25s,background .25s;
-}
+.gc{padding:18px 20px;border-radius:12px}
 .gc-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
-.gc-hd h4{font-size:11px;font-weight:600;color:var(--dim);text-transform:uppercase;letter-spacing:.5px}
-.gc-hd span{font-size:10px;color:var(--mt)}
+.gc-hd h4{font-size:11px;font-weight:600;color:var(--ink-dim);text-transform:uppercase;letter-spacing:.5px}
+.gc-hd span{font-size:10px;color:var(--ink-muted)}
 .gc-ch{position:relative;height:190px}
 
 /* ── Tables ── */
-.tb{
-  background:var(--sf);border:1px solid var(--bd);border-radius:6px;
-  overflow:hidden;margin-bottom:8px;
-  transition:border-color .25s,background .25s;
-}
+.tb{overflow:hidden;border-radius:12px;margin-bottom:8px}
 .tb-x{overflow-x:auto}
 table{width:100%;border-collapse:collapse}
-th{
-  text-align:left;padding:8px 20px;border-bottom:1px solid var(--bd);
-  color:var(--mt);font-size:10px;font-weight:600;letter-spacing:.5px;
-  text-transform:uppercase;white-space:nowrap;
-}
-td{
-  padding:8px 20px;border-bottom:1px solid var(--bdf);
-  color:var(--dim);font-size:13px;white-space:nowrap;
-}
+th{text-align:left;padding:9px 20px;border-bottom:1px solid rgba(255,255,255,.3);color:var(--ink-muted);font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;white-space:nowrap}
+td{padding:8px 20px;border-bottom:1px solid rgba(255,255,255,.15);color:var(--ink-dim);font-size:13px;white-space:nowrap}
 tr:last-child td{border-bottom:none}
 td.p{color:var(--ink);font-weight:500}
 td.n{text-align:right;font-family:var(--mo);font-size:12px}
 td.n strong{color:var(--ink);font-weight:600}
-.tag{
-  display:inline-flex;align-items:center;padding:0 8px;border-radius:999px;
-  font-size:11px;font-weight:500;height:20px;
-}
-.tag-p{background:var(--ac-6);color:var(--ac)}
+.tag{display:inline-flex;align-items:center;padding:0 8px;border-radius:999px;font-size:11px;font-weight:500;height:20px}
+.tag-p{background:var(--accent-6);color:var(--accent)}
 .tag-s{background:var(--te-10);color:var(--te)}
-.tag-g{color:var(--gr)}
-.tag-r{color:var(--rd)}
-.emp{padding:28px 20px;text-align:center;color:var(--mt)}
+.tag-g{color:var(--gr)}.tag-r{color:var(--rd)}
+.emp{padding:28px 20px;text-align:center;color:var(--ink-muted)}
 .emp .i{font-size:18px;margin-bottom:2px;opacity:.5}
-.ft{
-  text-align:center;padding:24px;color:var(--mt);font-size:12px;
-  border-top:1px solid var(--bd);margin-top:16px;
-}
+
+/* ── Footer ── */
+.ft{text-align:center;padding:24px;color:var(--ink-muted);font-size:12px;border-top:1px solid rgba(255,255,255,.3);margin-top:16px}
 .tt{position:fixed;bottom:20px;right:20px;z-index:999;display:flex;flex-direction:column;gap:6px;pointer-events:none}
 .toast{
-  background:var(--sf);border:1px solid var(--bd);border-radius:5px;
-  padding:10px 16px;font-size:12px;color:var(--dim);
-  pointer-events:auto;animation:si .2s,so .2s 2.8s forwards;
+  padding:10px 16px;border-radius:10px;font-size:12px;color:var(--ink-dim);
+  pointer-events:auto;animation:si .25s,so .25s 2.75s forwards;
 }
-@keyframes si{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-@keyframes so{from{opacity:1}to{opacity:0;transform:translateY(-3px)}}
+@keyframes si{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes so{from{opacity:1}to{opacity:0;transform:translateY(-4px)}}
 
 /* ── Modal ── */
 .overlay{
-  position:fixed;inset:0;background:rgba(0,0,0,.4);
-  z-index:1000;display:none;align-items:center;justify-content:center;
-  backdrop-filter:blur(2px);
+  position:fixed;inset:0;z-index:1000;
+  display:none;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.2);
+  backdrop-filter:blur(4px);
 }
 .overlay.show{display:flex}
 .modal{
-  background:var(--sf);border:1px solid var(--bd);border-radius:8px;
-  width:440px;max-width:90vw;max-height:85vh;overflow-y:auto;
-  padding:24px 28px;
-  box-shadow:0 20px 60px rgba(0,0,0,.15);
-  transition:background .25s,border-color .25s;
+  width:460px;max-width:92vw;max-height:88vh;overflow-y:auto;
+  padding:24px 28px;border-radius:16px;
+  animation:modal-in .25s ease;
 }
-.modal h3{font-size:16px;font-weight:600;color:var(--ink);margin-bottom:4px}
-.modal p{font-size:12px;color:var(--dim);margin-bottom:20px}
-.modal-group{margin-bottom:16px}
-.modal-group label{display:block;font-size:11px;font-weight:600;color:var(--dim);margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px}
-.modal-group select,.modal-group input{
-  width:100%;padding:7px 10px;border:1px solid var(--bd);border-radius:4px;
-  background:var(--bg);color:var(--ink);font-size:13px;font-family:var(--ff);
-  transition:border-color .2s,background .25s,color .25s;
+@keyframes modal-in{from{opacity:0;transform:scale(.96)translateY(8px)}to{opacity:1;transform:scale(1)translateY(0)}}
+.modal-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:2px}
+.modal-h h3{font-size:16px;font-weight:600;color:var(--ink)}
+.modal-close{float:right;border:none;background:none;font-size:18px;cursor:pointer;color:var(--ink-muted);padding:4px;line-height:1}
+.modal-close:hover{color:var(--ink-dim)}
+.modal-desc{font-size:12px;color:var(--ink-dim);margin-bottom:18px}
+
+/* ── Mode selector in settings ── */
+.mode-sel{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:18px}
+.mode-sel-btn{
+  padding:10px 12px;border-radius:10px;border:1px solid transparent;cursor:pointer;
+  font-family:var(--ff);font-size:12px;font-weight:500;text-align:center;
+  transition:all .2s;background:rgba(255,255,255,.3);color:var(--ink-dim);
 }
-.modal-group select:focus,.modal-group input:focus{
-  outline:none;border-color:var(--ac);
-  box-shadow:0 0 0 2px var(--ac-15);
+.mode-sel-btn .ico{font-size:18px;display:block;margin-bottom:3px}
+.mode-sel-btn .sub{font-size:10px;color:var(--ink-muted);font-weight:400;margin-top:1px}
+.mode-sel-btn.active{
+  background:rgba(255,255,255,.7);border-color:rgba(255,255,255,.8);
+  color:var(--ink);box-shadow:0 2px 12px rgba(0,0,0,.04);
 }
-.modal-group input[type="number"]{width:100px}
+.mode-sel-btn:not(.active):hover{background:rgba(255,255,255,.5);color:var(--ink)}
+
+/* ── Settings fields ── */
+.modal-g{margin-bottom:14px}
+.modal-g label{display:block;font-size:10px;font-weight:600;color:var(--ink-dim);margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px}
+.modal-g input,.modal-g select{
+  width:100%;padding:8px 11px;border-radius:8px;
+  border:1px solid rgba(255,255,255,.5);background:rgba(255,255,255,.4);
+  color:var(--ink);font-size:13px;font-family:var(--ff);
+  outline:none;transition:border-color .2s,background .2s;
+}
+.modal-g input:focus,.modal-g select:focus{
+  border-color:var(--accent);background:rgba(255,255,255,.7);
+  box-shadow:0 0 0 3px var(--accent-15);
+}
 .modal-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.modal-close{
-  float:right;border:none;background:none;
-  font-size:18px;cursor:pointer;color:var(--mt);padding:4px;line-height:1;
-}
-.modal-close:hover{color:var(--dim)}
-.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--bd)}
-.modal-actions button{
-  padding:7px 18px;border-radius:4px;font-size:13px;font-weight:500;cursor:pointer;font-family:var(--ff);
-}
-.btn-p{background:var(--ac);color:#fff;border:none;transition:background .15s}
-.btn-p:hover{background:var(--ac-h)}
-.btn-s{background:transparent;color:var(--dim);border:1px solid var(--bd);transition:border-color .15s,color .15s}
-.btn-s:hover{border-color:var(--ac-15);color:var(--ink)}
-.theme-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:4px}
-.theme-sel{
-  aspect-ratio:1;border-radius:5px;border:2px solid var(--bd);cursor:pointer;
-  display:flex;align-items:center;justify-content:center;
-  font-size:10px;font-weight:500;padding:2px;text-align:center;line-height:1.2;
-  transition:border-color .2s;background:var(--sf);color:var(--dim);overflow:hidden;word-break:break-all;
-}
-.theme-sel:hover{border-color:var(--ac-15)}
-.theme-sel.active{border-color:var(--ac);color:var(--ac);font-weight:600}
+.modal-row input[type="number"]{width:120px}
+.hint{font-size:10px;color:var(--ink-muted);margin-top:2px}
+.modal-acts{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;padding-top:14px;border-top:1px solid rgba(255,255,255,.3)}
+.modal-acts button{padding:8px 20px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;font-family:var(--ff);transition:all .15s}
+.btn-p{background:var(--accent);color:#fff;border:none}
+.btn-p:hover{background:#5a4bd1;box-shadow:0 4px 12px rgba(108,92,231,.25)}
+.btn-s{background:rgba(255,255,255,.4);color:var(--ink-dim);border:1px solid rgba(255,255,255,.5)}
+.btn-s:hover{background:rgba(255,255,255,.7);color:var(--ink)}
 
 @media(max-width:1024px){.r6{grid-template-columns:repeat(3,1fr)}.g2{grid-template-columns:1fr}}
 @media(max-width:768px){
   .r6{grid-template-columns:repeat(2,1fr)}
-  .mx{padding:24px 16px}.tp{padding:0 16px}.hd h2{font-size:24px}.mc-v{font-size:19px}
-  .modal{width:100%;max-width:100%;border-radius:0;height:100dvh;max-height:100dvh}
+  .mx{padding:20px 16px}.tp{padding:0 16px}
+  .mc-v{font-size:19px}.mode-bnr{padding:10px 14px}
+  .modal{width:100%;max-width:100%;border-radius:0;height:100dvh;max-height:100dvh;animation:none}
 }
 </style>
 </head>
 <body>
 
+<!-- Top Bar -->
 <div class="tp">
   <div class="tp-l">
     <div class="tp-m">M</div>
-    <h1>Model Monitor <span>· 监控</span></h1>
+    <h1>Model Monitor</h1>
   </div>
   <div class="tp-r">
-    <span><span class="tp-dot" id="sdot"></span><span id="stxt">连接中</span></span>
-    <span style="color:var(--mt)">|</span>
-    <span id="sclk">--</span>
-    <button class="tp-gear" id="gearBtn" title="设置">⚙</button>
+    <span class="item"><span class="tp-dot" id="sdot"></span><span id="stxt">待启动</span></span>
+    <span class="item" style="color:var(--ink-muted)">|</span>
+    <span class="item" id="sclk">--</span>
+    <button class="tp-gear" id="gearBtn">⚙</button>
   </div>
 </div>
 
+<!-- Content -->
 <div class="mx">
 
+  <!-- Mode Status Banner -->
+  <div class="mode-bnr glass" id="modeBanner">
+    <div class="mode-bnr-left">
+      <div class="mode-bnr-icon proxy" id="modeIcon">🔌</div>
+      <div class="mode-bnr-info">
+        <div class="name" id="modeName">代理模式</div>
+        <div class="desc" id="modeDesc">127.0.0.1:12345 → api.deepseek.com</div>
+      </div>
+    </div>
+    <div class="mode-bnr-right">
+      <button class="mode-bnr-btn" id="startStopBtn">▶ 启动</button>
+      <span class="pill off" id="modePill">未启动</span>
+    </div>
+  </div>
+
+  <!-- Dashboard -->
   <div class="hd">
     <h2>仪表盘</h2>
-    <p>API 用量与费用实时监控</p>
+    <p>API 用量实时监控</p>
   </div>
 
   <div class="rw r6">
-    <div class="mc"><div class="mc-l">总请求</div><div class="mc-v" id="d_c">--</div><div class="mc-s">累计</div></div>
-    <div class="mc"><div class="mc-l">总费用</div><div class="mc-v c1" id="d_cst">--</div><div class="mc-s">USD</div></div>
-    <div class="mc"><div class="mc-l">今日</div><div class="mc-v" id="d_td">--</div><div class="mc-s">当日费用</div></div>
-    <div class="mc"><div class="mc-l">本月</div><div class="mc-v c2" id="d_mo">--</div><div class="mc-s">月度费用</div></div>
-    <div class="mc"><div class="mc-l">输入</div><div class="mc-v c3" id="d_in">--</div><div class="mc-s">Token</div></div>
-    <div class="mc"><div class="mc-l">输出</div><div class="mc-v c4" id="d_out">--</div><div class="mc-s">Token</div></div>
+    <div class="mc glass"><div class="mc-l">总请求</div><div class="mc-v" id="d_c">--</div><div class="mc-s">累计</div></div>
+    <div class="mc glass"><div class="mc-l">总费用</div><div class="mc-v c1" id="d_cst">--</div><div class="mc-s">USD</div></div>
+    <div class="mc glass"><div class="mc-l">今日</div><div class="mc-v" id="d_td">--</div><div class="mc-s">当日费用</div></div>
+    <div class="mc glass"><div class="mc-l">本月</div><div class="mc-v c2" id="d_mo">--</div><div class="mc-s">月度费用</div></div>
+    <div class="mc glass"><div class="mc-l">输入</div><div class="mc-v c3" id="d_in">--</div><div class="mc-s">Token</div></div>
+    <div class="mc glass"><div class="mc-l">输出</div><div class="mc-v c4" id="d_out">--</div><div class="mc-s">Token</div></div>
   </div>
 
   <div class="sh"><h3>分析</h3></div>
   <div class="g2">
-    <div class="gc"><div class="gc-hd"><h4>每日费用</h4><span>30 天</span></div><div class="gc-ch"><canvas id="ch_d"></canvas></div></div>
-    <div class="gc"><div class="gc-hd"><h4>模型分布</h4><span>按费用</span></div><div class="gc-ch"><canvas id="ch_m"></canvas></div></div>
+    <div class="gc glass"><div class="gc-hd"><h4>每日费用</h4><span>30 天</span></div><div class="gc-ch"><canvas id="ch_d"></canvas></div></div>
+    <div class="gc glass"><div class="gc-hd"><h4>模型分布</h4><span>按费用</span></div><div class="gc-ch"><canvas id="ch_m"></canvas></div></div>
   </div>
 
-  <div class="sh"><h3>活动</h3></div>
   <div class="g2">
-    <div class="gc"><div class="gc-hd"><h4>每小时费用</h4><span>24 小时</span></div><div class="gc-ch"><canvas id="ch_h"></canvas></div></div>
-    <div class="gc"><div class="gc-hd"><h4>Token 分布</h4></div><div class="gc-ch"><canvas id="ch_t"></canvas></div></div>
+    <div class="gc glass"><div class="gc-hd"><h4>每小时费用</h4><span>24 小时</span></div><div class="gc-ch"><canvas id="ch_h"></canvas></div></div>
+    <div class="gc glass"><div class="gc-hd"><h4>Token 分布</h4></div><div class="gc-ch"><canvas id="ch_t"></canvas></div></div>
   </div>
 
   <div class="sh"><h3>调用记录</h3></div>
-  <div class="tb"><div class="tb-x">
+  <div class="tb glass"><div class="tb-x">
     <table>
       <thead><tr><th>时间</th><th>模式</th><th>模型</th><th class="n">输入</th><th class="n">输出</th><th class="n">费用</th><th class="n">延迟</th><th class="n">状态</th></tr></thead>
-      <tbody id="b_c"><tr><td colspan="8"><div class="emp"><div class="i" style="font-size:18px">📡</div><div style="margin-top:2px;font-size:13px">等待数据</div></div></td></tr></tbody>
+      <tbody id="b_c"><tr><td colspan="8"><div class="emp"><div class="i">📡</div><div style="margin-top:2px">等待数据</div></div></td></tr></tbody>
     </table>
   </div></div>
 
   <div class="sh"><h3>模型用量</h3></div>
-  <div class="tb"><div class="tb-x">
+  <div class="tb glass"><div class="tb-x">
     <table>
       <thead><tr><th>模型</th><th class="n">调用</th><th class="n">输入</th><th class="n">输出</th><th class="n">费用</th><th class="n">延迟</th></tr></thead>
-      <tbody id="b_m"><tr><td colspan="6"><div class="emp"><div class="i" style="font-size:18px">📊</div><div style="margin-top:2px;font-size:13px">暂无数据</div></div></td></tr></tbody>
+      <tbody id="b_m"><tr><td colspan="6"><div class="emp"><div class="i">📊</div><div style="margin-top:2px">暂无数据</div></div></td></tr></tbody>
     </table>
   </div></div>
 
@@ -298,52 +346,81 @@ td.n strong{color:var(--ink);font-weight:600}
 
 <!-- Settings Modal -->
 <div class="overlay" id="settingsOverlay">
-  <div class="modal">
+  <div class="modal glass">
     <button class="modal-close" id="modalClose">✕</button>
-    <h3>设置</h3>
-    <p>主题、刷新、显示选项</p>
+    <div class="modal-h"><h3>设置</h3></div>
+    <p class="modal-desc">选择采集模式并配置参数</p>
 
-    <div class="modal-group">
-      <label>颜色主题</label>
-      <div class="theme-grid" id="themeGrid">
-        <div class="theme-sel" data-theme="stripe">Stripe</div>
-        <div class="theme-sel" data-theme="dark">Dark</div>
-        <div class="theme-sel" data-theme="deepblue">DeepBlue</div>
-        <div class="theme-sel" data-theme="dusk">Dusk</div>
-        <div class="theme-sel" data-theme="moonlight">Moon</div>
+    <!-- Mode Selector -->
+    <div class="mode-sel" id="modeSel">
+      <button class="mode-sel-btn active" data-mode="proxy">
+        <span class="ico">🔌</span>
+        代理模式
+        <span class="sub">转发 API 请求</span>
+      </button>
+      <button class="mode-sel-btn" data-mode="sniffer">
+        <span class="ico">📡</span>
+        嗅探模式
+        <span class="sub">拦截 HTTPS 流量</span>
+      </button>
+    </div>
+
+    <!-- Sniffer Settings -->
+    <div id="snifferSettings" style="display:none">
+      <div class="modal-g">
+        <label>监听端口</label>
+        <input type="number" id="sniffPort" value="8080" min="1" max="65535">
+        <div class="hint">mitmproxy 监听端口，默认 8080</div>
+      </div>
+      <div class="modal-g">
+        <label>目标域名</label>
+        <input type="text" id="sniffTarget" value="api.deepseek.com">
+        <div class="hint">抓包目标，多个用逗号分隔</div>
+      </div>
+      <div class="modal-g">
+        <label>API Key (DeepSeek)</label>
+        <input type="password" id="sniffKey" placeholder="sk-...">
+        <div class="hint">用于计算定价，可选</div>
+      </div>
+      <div class="modal-g">
+        <label>HTTPS 解密</label>
+        <select id="sniffSSL">
+          <option value="insecure">不安全模式 (ssl_insecure)</option>
+          <option value="cert">安装 CA 证书</option>
+        </select>
       </div>
     </div>
 
-    <div class="modal-group">
-      <label>刷新间隔</label>
-      <div class="modal-row">
-        <input type="number" id="refreshInt" min="1" max="60" value="5">
-        <span style="font-size:12px;color:var(--dim)">秒</span>
+    <!-- Proxy Settings -->
+    <div id="proxySettings">
+      <div class="modal-g">
+        <label>目标 API</label>
+        <input type="text" id="proxyTarget" value="https://api.deepseek.com">
+      </div>
+      <div class="modal-row" style="gap:8px">
+        <div class="modal-g" style="flex:1">
+          <label>监听主机</label>
+          <input type="text" id="proxyHost" value="127.0.0.1">
+        </div>
+        <div class="modal-g" style="flex:1">
+          <label>端口</label>
+          <input type="number" id="proxyPort" value="12345" min="1" max="65535">
+        </div>
+      </div>
+      <div class="modal-g">
+        <label>API Key (DeepSeek)</label>
+        <input type="password" id="proxyKey" placeholder="sk-...">
+      </div>
+      <div class="modal-g">
+        <label>超时</label>
+        <div class="modal-row">
+          <input type="number" id="proxyTimeout" value="120" min="5" max="600">
+          <span style="font-size:12px;color:var(--ink-dim)">秒</span>
+        </div>
       </div>
     </div>
 
-    <div class="modal-group">
-      <label>API Key (DeepSeek)</label>
-      <input type="password" id="apiKey" placeholder="sk-..." value="">
-    </div>
-
-    <div class="modal-group">
-      <label>日费用告警阈值</label>
-      <div class="modal-row">
-        <input type="number" id="alertDaily" min="0" step="0.5" value="10">
-        <span style="font-size:12px;color:var(--dim)">USD</span>
-      </div>
-    </div>
-
-    <div class="modal-group">
-      <label>月费用告警阈值</label>
-      <div class="modal-row">
-        <input type="number" id="alertMonth" min="0" step="5" value="200">
-        <span style="font-size:12px;color:var(--dim)">USD</span>
-      </div>
-    </div>
-
-    <div class="modal-actions">
+    <div class="modal-acts">
       <button class="btn-s" id="modalCancel">取消</button>
       <button class="btn-p" id="modalSave">保存</button>
     </div>
@@ -351,39 +428,182 @@ td.n strong{color:var(--ink);font-weight:600}
 </div>
 
 <script>
-const PAL=['#533afd','#14b8a6','#c49a2a','#ea2261','#15be53','#64748d'];
-const CC={g:'rgba(0,0,0,.06)',t:'#94a3b8',a:'#533afd'};
-const THEMES=['stripe','dark','deepblue','dusk','moonlight'];
-
-let ws=null,rt=null,refreshTimer=null,currentTheme=localStorage.getItem('mm-theme')||'stripe';
+const PAL=['#4a6cf7','#0ea57e','#e8a838','#e06050','#0891b2','#4a5a78'];
+let mode=localStorage.getItem('mm-mode')||'proxy';
+if(localStorage.getItem('mm-proxy-host')==='0.0.0.0')localStorage.removeItem('mm-proxy-host');
+if(localStorage.getItem('mm-proxy-port')==='8080')localStorage.removeItem('mm-proxy-port');
+let ws=null,rt=null;
 
 function fn(x,d){return x==null?'--':Number(x).toLocaleString('en-US',{minimumFractionDigits:d||0,maximumFractionDigits:d||0})}
 function $f(x){return x==null?'--':'$'+Number(x).toFixed(4)}
 function sf(x){if(x==null)return'--';if(x>=1e6)return(x/1e6).toFixed(1)+'M';if(x>=1e3)return(x/1e3).toFixed(1)+'K';return fn(x)}
 function ck(){return new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'})}
-function ts(m){const b=document.getElementById('tbx'),t=document.createElement('div');t.className='toast';t.textContent=m;b.appendChild(t);setTimeout(()=>t.remove(),3e3)}
+function ts(m){const b=document.getElementById('tbx'),t=document.createElement('div');t.className='toast glass';t.textContent=m;b.appendChild(t);setTimeout(()=>t.remove(),3e3)}
 
 async function j(p){const r=await fetch('/api'+p);const d=await r.json();return d.data||d}
 function k(x){if(window['_'+x]){window['_'+x].destroy();delete window['_'+x]}}
 
-/* ── Theme ── */
-function applyTheme(t){
-  document.documentElement.setAttribute('data-theme',t);
-  localStorage.setItem('mm-theme',t);
-  currentTheme=t;
-  document.querySelectorAll('.theme-sel').forEach(el=>{
-    el.classList.toggle('active',el.dataset.theme===t);
-  });
-  // rebuild charts with new colors
-  Promise.all([l2(),l3(),l4()]).catch(()=>{});
+// ── Mode ──
+function updateModeUI(m){
+  const icon=document.getElementById('modeIcon');
+  const name=document.getElementById('modeName');
+  const desc=document.getElementById('modeDesc');
+  const pill=document.getElementById('modePill');
+  if(m==='sniffer'){
+    icon.className='mode-bnr-icon sniff';icon.textContent='📡';
+    name.textContent='嗅探模式';
+    desc.textContent='api.deepseek.com : 8080';
+    pill.textContent='未启动';pill.className='pill off';
+  }else{
+    icon.className='mode-bnr-icon proxy';icon.textContent='🔌';
+    name.textContent='代理模式';
+    const h=localStorage.getItem('mm-proxy-host')||'127.0.0.1';
+    const p=localStorage.getItem('mm-proxy-port')||'12345';
+    desc.textContent=h+':'+p+' → api.deepseek.com';
+    pill.textContent='未启动';pill.className='pill off';
+  }
 }
-applyTheme(currentTheme);
+function switchMode(m){
+  mode=m;localStorage.setItem('mm-mode',m);
+  document.querySelectorAll('#modeSel .mode-sel-btn').forEach(b=>{
+    b.classList.toggle('active',b.dataset.mode===m);
+  });
+  document.getElementById('snifferSettings').style.display=m==='sniffer'?'':'none';
+  document.getElementById('proxySettings').style.display=m==='proxy'?'':'none';
+  updateModeUI(m);
+}
 
+// ── Init mode ──
+switchMode(mode);
+
+// ── Start/Stop ──
+const startBtn=document.getElementById('startStopBtn');
+const modePill=document.getElementById('modePill');
+let polling=false;
+
+async function checkStatus(){
+  try{
+    const r=await fetch('/api/mode/status');const d=await r.json();
+    if(d.status==='running'){
+      startBtn.textContent='■ 停止';startBtn.className='mode-bnr-btn stop';
+      modePill.textContent='运行中';modePill.className='pill on';
+      document.getElementById('modePill').textContent='运行中';
+      document.getElementById('modePill').className='pill on';
+      document.getElementById('stxt').textContent='采集中';
+      document.getElementById('sdot').className='tp-dot';
+    }else{
+      startBtn.textContent='▶ 启动';startBtn.className='mode-bnr-btn';
+      modePill.textContent='未启动';modePill.className='pill off';
+      document.getElementById('stxt').textContent='待启动';
+      document.getElementById('sdot').className='tp-dot off';
+    }
+  }catch(e){}
+}
+
+startBtn.addEventListener('click',async()=>{
+  if(startBtn.textContent.includes('停止')){
+    // 停止
+    try{
+      const r=await fetch('/api/mode/stop',{method:'POST'});const d=await r.json();
+      if(d.status==='stopped'){ts('采集已停止');checkStatus();}
+    }catch(e){ts('停止失败');}
+  }else{
+    // 启动
+    const port=mode==='sniffer'?(localStorage.getItem('mm-sniff-port')||'8080'):(localStorage.getItem('mm-proxy-port')||'12345');
+    const host=mode==='proxy'?(localStorage.getItem('mm-proxy-host')||'127.0.0.1'):'';
+    try{
+      const r=await fetch('/api/mode/start',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({mode,port:parseInt(port),host})
+      });
+      const d=await r.json();
+      if(d.status==='started'){ts('采集已启动 (PID: '+d.pid+')');checkStatus();}
+      else{ts(d.message||'启动失败');}
+    }catch(e){ts('启动失败');}
+  }
+});
+
+// 每3秒轮询进程状态
+setInterval(checkStatus,3000);
+checkStatus();
+
+// ── Settings ──
+function loadSettings(){
+  document.getElementById('sniffPort').value=localStorage.getItem('mm-sniff-port')||'8080';
+  document.getElementById('sniffTarget').value=localStorage.getItem('mm-sniff-target')||'api.deepseek.com';
+  document.getElementById('sniffKey').value=localStorage.getItem('mm-sniff-key')||'';
+  document.getElementById('sniffSSL').value=localStorage.getItem('mm-sniff-ssl')||'insecure';
+  document.getElementById('proxyTarget').value=localStorage.getItem('mm-proxy-target')||'https://api.deepseek.com';
+  document.getElementById('proxyHost').value=localStorage.getItem('mm-proxy-host')||'127.0.0.1';
+  document.getElementById('proxyPort').value=localStorage.getItem('mm-proxy-port')||'12345';
+  document.getElementById('proxyKey').value=localStorage.getItem('mm-proxy-key')||'';
+  document.getElementById('proxyTimeout').value=localStorage.getItem('mm-proxy-timeout')||'120';
+  // sync mode selector
+  document.querySelectorAll('#modeSel .mode-sel-btn').forEach(b=>{
+    b.classList.toggle('active',b.dataset.mode===mode);
+  });
+  document.getElementById('snifferSettings').style.display=mode==='sniffer'?'':'none';
+  document.getElementById('proxySettings').style.display=mode==='proxy'?'':'none';
+}
+function saveSettings(){
+  localStorage.setItem('mm-sniff-port',document.getElementById('sniffPort').value);
+  localStorage.setItem('mm-sniff-target',document.getElementById('sniffTarget').value);
+  localStorage.setItem('mm-sniff-key',document.getElementById('sniffKey').value);
+  localStorage.setItem('mm-sniff-ssl',document.getElementById('sniffSSL').value);
+  localStorage.setItem('mm-proxy-target',document.getElementById('proxyTarget').value);
+  localStorage.setItem('mm-proxy-host',document.getElementById('proxyHost').value);
+  localStorage.setItem('mm-proxy-port',document.getElementById('proxyPort').value);
+  localStorage.setItem('mm-proxy-key',document.getElementById('proxyKey').value);
+  localStorage.setItem('mm-proxy-timeout',document.getElementById('proxyTimeout').value);
+  updateModeUI(mode);
+  // 同步到后端 config.yaml
+  fetch('/api/settings',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      proxy_host:document.getElementById('proxyHost').value,
+      proxy_port:document.getElementById('proxyPort').value,
+      proxy_target:document.getElementById('proxyTarget').value,
+      proxy_key:document.getElementById('proxyKey').value,
+      proxy_timeout:document.getElementById('proxyTimeout').value,
+      sniff_port:document.getElementById('sniffPort').value,
+      sniff_target:document.getElementById('sniffTarget').value,
+      sniff_key:document.getElementById('sniffKey').value,
+    })
+  }).then(r=>r.json()).then(d=>{
+    if(d.status==='ok')ts('配置已保存到服务器');
+    else ts('保存失败: '+d.message);
+  }).catch(()=>ts('保存失败: 无法连接服务器'));
+}
+
+document.querySelectorAll('#modeSel .mode-sel-btn').forEach(b=>{
+  b.addEventListener('click',()=>{
+    if(b.dataset.mode===mode)return;
+    switchMode(b.dataset.mode);
+    // also update settings visibility immediately
+    document.getElementById('snifferSettings').style.display=b.dataset.mode==='sniffer'?'':'none';
+    document.getElementById('proxySettings').style.display=b.dataset.mode==='proxy'?'':'none';
+  });
+});
+document.getElementById('gearBtn').addEventListener('click',()=>{
+  loadSettings();
+  document.getElementById('settingsOverlay').classList.add('show');
+});
+document.getElementById('modalClose').addEventListener('click',()=>document.getElementById('settingsOverlay').classList.remove('show'));
+document.getElementById('modalCancel').addEventListener('click',()=>document.getElementById('settingsOverlay').classList.remove('show'));
+document.getElementById('settingsOverlay').addEventListener('click',e=>{if(e.target.id==='settingsOverlay')document.getElementById('settingsOverlay').classList.remove('show')});
+document.getElementById('modalSave').addEventListener('click',()=>{
+  saveSettings();
+  document.getElementById('settingsOverlay').classList.remove('show');
+});
+
+// ── Charts ──
 const CD=(pie)=>({
   responsive:true,maintainAspectRatio:false,animation:{duration:400,easing:'easeOutCubic'},
-  plugins:{legend:pie?{position:'bottom',labels:{color:document.documentElement.getAttribute('data-theme')==='stripe'?'#94a3b8':'#94a3b8',font:{size:10},padding:8,usePointStyle:true,pointStyle:'circle'}}:{display:false},
-  tooltip:{backgroundColor:'var(--sf)',titleColor:'var(--ink)',bodyColor:'var(--dim)',borderColor:'var(--bd)',borderWidth:1,padding:8,cornerRadius:4,bodyFont:{size:12}}},
-  scales:pie?undefined:{x:{ticks:{color:'var(--mt)',font:{size:9}},grid:{color:'rgba(0,0,0,.06)'}},y:{ticks:{color:'var(--mt)',font:{size:9}},grid:{color:'rgba(0,0,0,.06)'},beginAtZero:true}}
+  plugins:{legend:pie?{position:'bottom',labels:{color:'var(--ink-muted)',font:{size:10},padding:8,usePointStyle:true,pointStyle:'circle'}}:{display:false},
+  tooltip:{backgroundColor:'rgba(255,255,255,.85)',titleColor:'var(--ink)',bodyColor:'var(--ink-dim)',borderColor:'rgba(255,255,255,.6)',borderWidth:1,backdropFilter:'blur(8px)',padding:8,cornerRadius:8,bodyFont:{size:12}}},
+  scales:pie?undefined:{x:{ticks:{color:'var(--ink-muted)',font:{size:9}},grid:{color:'rgba(0,0,0,.04)'}},y:{ticks:{color:'var(--ink-muted)',font:{size:9}},grid:{color:'rgba(0,0,0,.04)'},beginAtZero:true}}
 });
 
 async function l1(){
@@ -399,12 +619,11 @@ async function l2(){
   const d=await j('/daily?days=30');
   if(!d||!d.length){k('d');return}
   const l=d.map(x=>x.date?x.date.slice(5):'');const v=d.map(x=>x.cost||0);
-  const accent=getComputedStyle(document.documentElement).getPropertyValue('--ac').trim();
-  k('d');window['_d']=new Chart(document.getElementById('ch_d'),{type:'bar',data:{labels:l,datasets:[{label:'费用',data:v,backgroundColor:accent+'75',hoverBackgroundColor:accent+'99',borderRadius:2,barPercentage:.5}]},options:{...CD(),scales:{x:{...CD().scales.x},y:{...CD().scales.y,title:{display:true,text:'$',color:'var(--mt)',font:{size:9}}}}}});
+  k('d');window['_d']=new Chart(document.getElementById('ch_d'),{type:'bar',data:{labels:l,datasets:[{label:'费用',data:v,backgroundColor:'rgba(74,108,247,.45)',hoverBackgroundColor:'rgba(74,108,247,.65)',borderRadius:2,barPercentage:.5}]},options:{...CD(),scales:{x:{...CD().scales.x},y:{...CD().scales.y,title:{display:true,text:'$',color:'var(--ink-muted)',font:{size:9}}}}}});
 }
 async function l3(){
   const d=await j('/models');const tb=document.getElementById('b_m');
-  if(!d||!d.length){tb.innerHTML='<tr><td colspan="6"><div class="emp"><div class="i" style="font-size:18px">📊</div><div style="margin-top:2px;font-size:13px">暂无数据</div></div></td></tr>';k('m');return}
+  if(!d||!d.length){tb.innerHTML='<tr><td colspan="6"><div class="emp"><div class="i">📊</div><div style="margin-top:2px">暂无数据</div></div></td></tr>';k('m');return}
   const l=d.map(m=>m.model||'?');const v=d.map(m=>m.cost||0);
   k('m');window['_m']=new Chart(document.getElementById('ch_m'),{type:'doughnut',data:{labels:l,datasets:[{data:v,backgroundColor:PAL.slice(0,d.length),borderWidth:0}]},options:CD(true)});
   tb.innerHTML=d.map(m=>`<tr><td class="p">${m.model}</td><td class="n">${fn(m.calls)}</td><td class="n">${fn(m.input_tokens)}</td><td class="n">${fn(m.output_tokens)}</td><td class="n"><strong>${$f(m.cost)}</strong></td><td class="n">${fn(m.avg_latency_ms,1)}ms</td></tr>`).join('');
@@ -414,66 +633,28 @@ async function l4(){
   if(!d||!d.length){k('h');k('t');return}
   const l=d.map(h=>h.hour?h.hour.split(' ')[1]||h.hour:'');
   const v=d.map(h=>h.cost||0);
-  const accent=getComputedStyle(document.documentElement).getPropertyValue('--ac').trim();
-  const green=getComputedStyle(document.documentElement).getPropertyValue('--gr').trim();
-  k('h');window['_h']=new Chart(document.getElementById('ch_h'),{type:'line',data:{labels:l,datasets:[{label:'费用',data:v,borderColor:accent,backgroundColor:accent+'15',fill:true,tension:.3,pointRadius:1.5,pointHoverRadius:4,borderWidth:1.5}]},options:CD()});
+  k('h');window['_h']=new Chart(document.getElementById('ch_h'),{type:'line',data:{labels:l,datasets:[{label:'费用',data:v,borderColor:'#4a6cf7',backgroundColor:'rgba(74,108,247,.1)',fill:true,tension:.3,pointRadius:1.5,pointHoverRadius:4,borderWidth:1.5}]},options:CD()});
   const i=d.reduce((s,h)=>s+(h.input_tokens||0),0),o=d.reduce((s,h)=>s+(h.output_tokens||0),0);
-  k('t');window['_t']=new Chart(document.getElementById('ch_t'),{type:'doughnut',data:{labels:['输入','输出'],datasets:[{data:[i,o],backgroundColor:[accent,green],borderWidth:0}]},options:CD(true)});
+  k('t');window['_t']=new Chart(document.getElementById('ch_t'),{type:'doughnut',data:{labels:['输入','输出'],datasets:[{data:[i,o],backgroundColor:['#4a6cf7','#0ea57e'],borderWidth:0}]},options:CD(true)});
 }
 async function l5(){
   const d=await j('/calls?limit=50');const tb=document.getElementById('b_c');
-  if(!d||!d.length){tb.innerHTML='<tr><td colspan="8"><div class="emp"><div class="i" style="font-size:18px">📡</div><div style="margin-top:2px;font-size:13px">等待数据</div></div></td></tr>';return}
-  tb.innerHTML=d.map(c=>{const mt=c.mode==='sniffer'?'嗅探':'代理';const mc=c.mode==='sniffer'?'tag-s':'tag-p';const ok=c.status_code>=200&&c.status_code<300;const md=(c.model||'--').length>24?(c.model||'--').slice(0,22)+'…':(c.model||'--');return`<tr><td style="color:var(--mt);font-size:12px">${c.timestamp||'--'}</td><td><span class="tag ${mc}">${mt}</span></td><td class="p">${md}</td><td class="n">${fn(c.input_tokens)}</td><td class="n">${fn(c.output_tokens)}</td><td class="n">${$f(c.cost)}</td><td class="n">${fn(c.latency_ms,1)}ms</td><td class="n"><span class="tag ${ok?'tag-g':'tag-r'}">${c.status_code||'--'}</span></td></tr>`}).join('');
+  if(!d||!d.length){tb.innerHTML='<tr><td colspan="8"><div class="emp"><div class="i">📡</div><div style="margin-top:2px">等待数据</div></div></td></tr>';return}
+  tb.innerHTML=d.map(c=>{const mt=c.mode==='sniffer'?'嗅探':'代理';const mc=c.mode==='sniffer'?'tag-s':'tag-p';const ok=c.status_code>=200&&c.status_code<300;const md=(c.model||'--').length>24?(c.model||'--').slice(0,22)+'…':(c.model||'--');return`<tr><td style="color:var(--ink-muted);font-size:12px">${c.timestamp||'--'}</td><td><span class="tag ${mc}">${mt}</span></td><td class="p">${md}</td><td class="n">${fn(c.input_tokens)}</td><td class="n">${fn(c.output_tokens)}</td><td class="n">${$f(c.cost)}</td><td class="n">${fn(c.latency_ms,1)}ms</td><td class="n"><span class="tag ${ok?'tag-g':'tag-r'}">${c.status_code||'--'}</span></td></tr>`}).join('');
 }
 async function ref(){try{await Promise.all([l1(),l2(),l3(),l4(),l5()])}catch(e){}}
 
-/* ── WebSocket ── */
+// ── WS ──
 function cn(){
   if(ws&&ws.readyState===WebSocket.OPEN)return;
   ws=new WebSocket((location.protocol==='https:'?'wss:':'ws:')+'//'+location.host+'/api/ws');
-  ws.onopen=()=>{document.getElementById('stxt').textContent='运行中';document.getElementById('sdot').className='tp-dot';if(rt){clearTimeout(rt);rt=null}};
-  ws.onmessage=e=>{try{const m=JSON.parse(e.data);if(m.event_type==='api_call'){l1();l5();l3();ts('调用 '+m.model+' · $'+m.cost.toFixed(4))}}catch(_){}};
-  ws.onclose=()=>{document.getElementById('stxt').textContent='重连';document.getElementById('sdot').className='tp-dot off';rt=setTimeout(cn,3e3)};
+  ws.onopen=()=>{if(rt){clearTimeout(rt);rt=null}};
+  ws.onmessage=e=>{try{const m=JSON.parse(e.data);if(m.event_type==='api_call'){l1();l5();l3();ts('调用 '+m.model)} }catch(_){}};
+  ws.onclose=()=>{rt=setTimeout(cn,3e3)};
   ws.onerror=()=>ws.close();
 }
-
-/* ── Settings ── */
-const overlay=document.getElementById('settingsOverlay');
-document.getElementById('gearBtn').addEventListener('click',()=>{
-  overlay.classList.add('show');
-  document.getElementById('apiKey').value=localStorage.getItem('mm-apikey')||'';
-  document.getElementById('alertDaily').value=localStorage.getItem('mm-alert-daily')||10;
-  document.getElementById('alertMonth').value=localStorage.getItem('mm-alert-month')||200;
-  document.getElementById('refreshInt').value=localStorage.getItem('mm-refresh')||5;
-});
-document.getElementById('modalClose').addEventListener('click',()=>overlay.classList.remove('show'));
-document.getElementById('modalCancel').addEventListener('click',()=>overlay.classList.remove('show'));
-overlay.addEventListener('click',e=>{if(e.target===overlay)overlay.classList.remove('show')});
-document.getElementById('modalSave').addEventListener('click',()=>{
-  const theme=document.querySelector('.theme-sel.active')?.dataset?.theme||currentTheme;
-  applyTheme(theme);
-  const ri=parseInt(document.getElementById('refreshInt').value)||5;
-  localStorage.setItem('mm-theme',theme);
-  localStorage.setItem('mm-refresh',ri);
-  localStorage.setItem('mm-apikey',document.getElementById('apiKey').value);
-  localStorage.setItem('mm-alert-daily',document.getElementById('alertDaily').value);
-  localStorage.setItem('mm-alert-month',document.getElementById('alertMonth').value);
-  if(refreshTimer){clearInterval(refreshTimer)}
-  refreshTimer=setInterval(()=>{if(!ws||ws.readyState!==WebSocket.OPEN)ref()},ri*1000);
-  overlay.classList.remove('show');
-  ts('设置已保存');
-});
-document.querySelectorAll('.theme-sel').forEach(el=>{
-  el.addEventListener('click',()=>{
-    document.querySelectorAll('.theme-sel').forEach(x=>x.classList.remove('active'));
-    el.classList.add('active');
-  });
-});
-
-/* ── Init ── */
 ref();cn();
-const savedRI=parseInt(localStorage.getItem('mm-refresh'))||5;
-refreshTimer=setInterval(()=>{if(!ws||ws.readyState!==WebSocket.OPEN)ref()},savedRI*1000);
+setInterval(()=>{if(!ws||ws.readyState!==WebSocket.OPEN)ref()},6e4);
 setInterval(()=>{const e=document.getElementById('sclk');if(e)e.textContent=ck()},1e4);
 </script>
 </body>

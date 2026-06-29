@@ -88,31 +88,35 @@ class ModelMonitorAddon:
         model = pending["model"]
         cost = adapter.calculate_cost(model, usage["input_tokens"], usage["output_tokens"])
 
-        # 记录到数据库
-        self._db.record_call(
-            mode="sniffer",
-            provider=provider,
-            model=model,
-            input_tokens=usage["input_tokens"],
-            output_tokens=usage["output_tokens"],
-            cost=cost,
-            latency_ms=latency_ms,
-            status_code=flow.response.status_code if flow.response else 0,
-            endpoint=pending["path"],
-        )
+        # 仅记录成功的聊天补全请求，过滤掉探测/健康检查/失败等无关请求
+        is_chat = "/chat/completions" in pending.get("path", "")
+        is_success = flow.response and flow.response.status_code < 400
+        if is_chat and is_success:
+            # 记录到数据库
+            self._db.record_call(
+                mode="sniffer",
+                provider=provider,
+                model=model,
+                input_tokens=usage["input_tokens"],
+                output_tokens=usage["output_tokens"],
+                cost=cost,
+                latency_ms=latency_ms,
+                status_code=flow.response.status_code if flow.response else 0,
+                endpoint=pending["path"],
+            )
 
-        # 发布实时事件
-        event_bus.publish(ApiCallEvent(
-            mode="sniffer",
-            provider=provider,
-            model=model,
-            input_tokens=usage["input_tokens"],
-            output_tokens=usage["output_tokens"],
-            cost=cost,
-            latency_ms=latency_ms,
-            status_code=flow.response.status_code if flow.response else 0,
-            endpoint=pending["path"],
-        ).to_dict())
+            # 发布实时事件
+            event_bus.publish(ApiCallEvent(
+                mode="sniffer",
+                provider=provider,
+                model=model,
+                input_tokens=usage["input_tokens"],
+                output_tokens=usage["output_tokens"],
+                cost=cost,
+                latency_ms=latency_ms,
+                status_code=flow.response.status_code if flow.response else 0,
+                endpoint=pending["path"],
+            ).to_dict())
 
         logger.info(
             "嗅探记录: %s/%s - 输入:%d 输出:%d 费用:%.4f 延迟:%.1fms",

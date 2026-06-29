@@ -25,7 +25,6 @@ class DeepSeekAdapter:
     def __init__(self, config: dict[str, Any]):
         self.provider_name = "deepseek"
         self.config = config
-        self.api_key: str = config.get("api_key", "")
         self.pricing: dict[str, dict[str, float]] = {
             **DEEPSEEK_PRICING,
             **config.get("pricing", {}),

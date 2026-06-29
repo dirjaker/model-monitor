@@ -67,14 +67,6 @@ class TestConfig:
         assert config.web_port == 8000
         assert config.db_path == "data/usage.db"
 
-    def test_providers(self, config_file):
-        """应正确读取提供商配置"""
-        config = Config(config_file)
-        providers = config.providers
-        assert "deepseek" in providers
-        assert providers["deepseek"]["api_key"] == "sk-test-key"
-        assert providers["deepseek"]["base_url"] == "https://api.deepseek.com"
-
     def test_alerts_config(self, config_file):
         """应正确读取告警配置"""
         config = Config(config_file)

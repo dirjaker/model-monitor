@@ -58,10 +58,8 @@ class ProxyServer:
 
     def _resolve_upstream(self, request: Request) -> tuple[str, DeepSeekAdapter]:
         """解析上游地址和适配器（仅支持 DeepSeek）"""
-        providers = self._config.providers
-        provider_cfg = providers.get("deepseek", {})
-        base_url = provider_cfg.get("base_url", "https://api.deepseek.com")
-        adapter = DeepSeekAdapter(provider_cfg)
+        base_url = str(self._config.get("proxy.target", "https://api.deepseek.com"))
+        adapter = DeepSeekAdapter({})
         return base_url, adapter
 
     async def _handle_request(self, request: Request, path: str) -> Response:
@@ -77,9 +75,6 @@ class ProxyServer:
         # 构建请求头
         headers = dict(request.headers)
         headers.pop("host", None)
-        # 传递 API key — 仅当请求本身没有 Authorization 时才补充
-        if "authorization" not in headers and adapter.api_key:
-            headers["authorization"] = f"Bearer {adapter.api_key}"
 
         # 读取请求体
         body = await request.body()

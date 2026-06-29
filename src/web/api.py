@@ -162,16 +162,11 @@ def create_api_router(config: Config, db: Database) -> APIRouter:
                 config.set("proxy.timeout", int(body["proxy_timeout"]))
             if "proxy_target" in body:
                 config.set("proxy.target", body["proxy_target"])
-            if "proxy_key" in body:
-                config.set("providers.deepseek.api_key", body["proxy_key"])
-
             # 嗅探配置
             if "sniff_port" in body:
                 config.set("sniffer.port", int(body["sniff_port"]))
             if "sniff_target" in body:
                 config.set("sniffer.targets", [t.strip() for t in body["sniff_target"].split(",")])
-            if "sniff_key" in body:
-                config.set("providers.deepseek.api_key", body["sniff_key"])
 
             config.save()
             logger.info("配置已持久化到 %s", config._path)

@@ -378,11 +378,6 @@ td.n strong{color:var(--ink);font-weight:600}
         <div class="hint">抓包目标，多个用逗号分隔</div>
       </div>
       <div class="modal-g">
-        <label>API Key (DeepSeek)</label>
-        <input type="password" id="sniffKey" placeholder="sk-...">
-        <div class="hint">用于计算定价，可选</div>
-      </div>
-      <div class="modal-g">
         <label>HTTPS 解密</label>
         <select id="sniffSSL">
           <option value="insecure">不安全模式 (ssl_insecure)</option>
@@ -406,10 +401,6 @@ td.n strong{color:var(--ink);font-weight:600}
           <label>端口</label>
           <input type="number" id="proxyPort" value="12345" min="1" max="65535">
         </div>
-      </div>
-      <div class="modal-g">
-        <label>API Key (DeepSeek)</label>
-        <input type="password" id="proxyKey" placeholder="sk-...">
       </div>
       <div class="modal-g">
         <label>超时</label>
@@ -532,12 +523,10 @@ checkStatus();
 function loadSettings(){
   document.getElementById('sniffPort').value=localStorage.getItem('mm-sniff-port')||'8080';
   document.getElementById('sniffTarget').value=localStorage.getItem('mm-sniff-target')||'api.deepseek.com';
-  document.getElementById('sniffKey').value=localStorage.getItem('mm-sniff-key')||'';
   document.getElementById('sniffSSL').value=localStorage.getItem('mm-sniff-ssl')||'insecure';
   document.getElementById('proxyTarget').value=localStorage.getItem('mm-proxy-target')||'https://api.deepseek.com';
   document.getElementById('proxyHost').value=localStorage.getItem('mm-proxy-host')||'127.0.0.1';
   document.getElementById('proxyPort').value=localStorage.getItem('mm-proxy-port')||'12345';
-  document.getElementById('proxyKey').value=localStorage.getItem('mm-proxy-key')||'';
   document.getElementById('proxyTimeout').value=localStorage.getItem('mm-proxy-timeout')||'120';
   // sync mode selector
   document.querySelectorAll('#modeSel .mode-sel-btn').forEach(b=>{
@@ -549,12 +538,10 @@ function loadSettings(){
 function saveSettings(){
   localStorage.setItem('mm-sniff-port',document.getElementById('sniffPort').value);
   localStorage.setItem('mm-sniff-target',document.getElementById('sniffTarget').value);
-  localStorage.setItem('mm-sniff-key',document.getElementById('sniffKey').value);
   localStorage.setItem('mm-sniff-ssl',document.getElementById('sniffSSL').value);
   localStorage.setItem('mm-proxy-target',document.getElementById('proxyTarget').value);
   localStorage.setItem('mm-proxy-host',document.getElementById('proxyHost').value);
   localStorage.setItem('mm-proxy-port',document.getElementById('proxyPort').value);
-  localStorage.setItem('mm-proxy-key',document.getElementById('proxyKey').value);
   localStorage.setItem('mm-proxy-timeout',document.getElementById('proxyTimeout').value);
   updateModeUI(mode);
   // 同步到后端 config.yaml
@@ -565,11 +552,9 @@ function saveSettings(){
       proxy_host:document.getElementById('proxyHost').value,
       proxy_port:document.getElementById('proxyPort').value,
       proxy_target:document.getElementById('proxyTarget').value,
-      proxy_key:document.getElementById('proxyKey').value,
       proxy_timeout:document.getElementById('proxyTimeout').value,
       sniff_port:document.getElementById('sniffPort').value,
       sniff_target:document.getElementById('sniffTarget').value,
-      sniff_key:document.getElementById('sniffKey').value,
     })
   }).then(r=>r.json()).then(d=>{
     if(d.status==='ok')ts('配置已保存到服务器');

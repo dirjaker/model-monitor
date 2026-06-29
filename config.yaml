@@ -13,23 +13,7 @@ web:
   port: '10004'
 database:
   path: data/usage.db
-providers:
-  deepseek:
-    base_url: https://api.deepseek.com
-    api_key: 'REDACTED_DEEPSEEK_KEY'
-    pricing:
-      deepseek-chat:
-        input: 1.0
-        output: 2.0
-      deepseek-reasoner:
-        input: 4.0
-        output: 16.0
-      deepseek-v4-flash:
-        input: 1.0
-        output: 2.0
-      deepseek-v4-pro:
-        input: 2.0
-        output: 8.0
+
 alerts:
   enabled: false
   daily_threshold: 10.0

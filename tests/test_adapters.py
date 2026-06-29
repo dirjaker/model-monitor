@@ -138,6 +138,4 @@ class TestDeepSeekAdapter:
         """提供商名称应为 deepseek"""
         assert adapter.provider_name == "deepseek"
 
-    def test_api_key(self, adapter):
-        """API Key 应正确读取"""
-        assert adapter.api_key == "sk-test"
+

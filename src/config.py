@@ -107,7 +107,6 @@ class Config:
             "sniffer": {"port": 8080, "targets": ["api.deepseek.com", "openrouter.ai"]},
             "web": {"host": "0.0.0.0", "port": 8000},
             "database": {"path": "data/usage.db"},
-            "providers": {},
             "alerts": {"enabled": False, "daily_threshold": 10.0, "monthly_threshold": 200.0, "webhook_url": ""},
         }
 
@@ -178,9 +177,6 @@ class Config:
         Path(path).parent.mkdir(parents=True, exist_ok=True)
         return path
 
-    @property
-    def providers(self) -> dict[str, Any]:
-        return dict(self._data.get("providers", {}))
 
     @property
     def alerts_enabled(self) -> bool:

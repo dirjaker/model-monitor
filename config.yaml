@@ -12,7 +12,6 @@ sniffer:
   port: 8080
   targets:
     - api.deepseek.com
-    - openrouter.ai
 
 web:
   host: 0.0.0.0
@@ -32,20 +31,12 @@ providers:
       deepseek-reasoner:
         input: 4.0
         output: 16.0
-  openrouter:
-    base_url: https://openrouter.ai/api
-    api_key: ${OPENROUTER_API_KEY}
-    pricing: {}
-  mimo:
-    base_url: https://openrouter.ai/api/v1
-    api_key: ${OPENROUTER_API_KEY}
-    pricing:
-      mimo-v2.5-pro:
+      deepseek-v4-flash:
         input: 1.0
         output: 2.0
-      mimo-v2.5-flash:
-        input: 0.5
-        output: 1.0
+      deepseek-v4-pro:
+        input: 2.0
+        output: 8.0
 
 alerts:
   enabled: false

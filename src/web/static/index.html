@@ -343,10 +343,63 @@ async function refresh() {
   await Promise.all([loadStats(), loadDaily(), loadModels(), loadHourly(), loadCalls()]);
 }
 
-// 初始化
+// ── WebSocket 实时推送 ──
+let ws = null;
+let wsReconnectTimer = null;
+
+function connectWS() {
+  if (ws && ws.readyState === WebSocket.OPEN) return;
+  
+  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  ws = new WebSocket(`${proto}//${location.host}/api/ws`);
+  
+  ws.onopen = () => {
+    document.getElementById('statusText').textContent = 'Connected (Live)';
+    if (wsReconnectTimer) {
+      clearTimeout(wsReconnectTimer);
+      wsReconnectTimer = null;
+    }
+  };
+  
+  ws.onmessage = (event) => {
+    try {
+      const msg = JSON.parse(event.data);
+      
+      if (msg.event_type === 'api_call') {
+        // 有新 API 调用 — 刷新统计和最近调用
+        loadStats();
+        loadCalls();
+        loadModels();
+      } else if (msg.event_type === 'pong') {
+        // 心跳回复
+      } else if (msg.event_type === 'connected') {
+        // 连接确认
+      }
+    } catch (e) {
+      // 忽略解析错误
+    }
+  };
+  
+  ws.onclose = () => {
+    document.getElementById('statusText').textContent = 'Reconnecting...';
+    // 断线重连
+    wsReconnectTimer = setTimeout(connectWS, 3000);
+  };
+  
+  ws.onerror = () => {
+    ws.close();
+  };
+}
+
+// 替代 setInterval 刷新 — WebSocket 接管实时更新
+// 轮询作为后备，间隔从30秒改为60秒
 refresh();
-// 每30秒自动刷新
-setInterval(refresh, 30000);
+connectWS();
+setInterval(() => {
+  if (!ws || ws.readyState !== WebSocket.OPEN) {
+    refresh();
+  }
+}, 60000);
 </script>
 </body>
 </html>

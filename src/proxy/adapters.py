@@ -1,33 +1,51 @@
 """
-模型提供商适配器
-解析不同提供商的 API 响应格式，计算费用。
+模型提供商适配器 — DeepSeek 专用版
+
+解析 DeepSeek API 响应格式，计算费用。
 """
 
 import json
 import logging
-from abc import ABC, abstractmethod
 from typing import Any
 
 logger = logging.getLogger(__name__)
 
+# DeepSeek 模型定价（每百万 token 美元）
+DEEPSEEK_PRICING: dict[str, dict[str, float]] = {
+    "deepseek-chat": {"input": 1.0, "output": 2.0},
+    "deepseek-reasoner": {"input": 4.0, "output": 16.0},
+    "deepseek-v4-flash": {"input": 1.0, "output": 2.0},
+    "deepseek-v4-pro": {"input": 2.0, "output": 8.0},
+}
 
-class BaseAdapter(ABC):
-    """适配器基类"""
 
-    def __init__(self, provider_name: str, config: dict[str, Any]):
-        self.provider_name = provider_name
+class DeepSeekAdapter:
+    """DeepSeek API 适配器"""
+
+    def __init__(self, config: dict[str, Any]):
+        self.provider_name = "deepseek"
         self.config = config
         self.api_key: str = config.get("api_key", "")
-        self.pricing: dict[str, dict[str, float]] = config.get("pricing", {})
+        self.pricing: dict[str, dict[str, float]] = {
+            **DEEPSEEK_PRICING,
+            **config.get("pricing", {}),
+        }
 
-    @abstractmethod
     def parse_usage(self, response_body: bytes) -> dict[str, int]:
         """从非流式响应中解析 token 使用量"""
-        ...
+        try:
+            data = json.loads(response_body)
+            usage = data.get("usage", {})
+            return {
+                "input_tokens": usage.get("prompt_tokens", 0),
+                "output_tokens": usage.get("completion_tokens", 0),
+            }
+        except (json.JSONDecodeError, KeyError) as e:
+            logger.warning("DeepSeek 响应解析失败: %s", e)
+            return {"input_tokens": 0, "output_tokens": 0}
 
     def parse_streaming_usage(self, full_response: str) -> dict[str, int]:
         """从流式响应中解析 token 使用量"""
-        # 默认从最后一个 chunk 中提取 usage
         usage = {"input_tokens": 0, "output_tokens": 0}
         lines = full_response.strip().split("\n")
         for line in reversed(lines):
@@ -48,82 +66,27 @@ class BaseAdapter(ABC):
         return usage
 
     def calculate_cost(self, model: str, input_tokens: int, output_tokens: int) -> float:
-        """计算调用费用（每百万 token 的价格，单位美元）"""
-        model_pricing = self.pricing.get(model, {})
+        """计算调用费用"""
+
+        def _find_pricing(m: str) -> dict[str, float]:
+            if m in self.pricing:
+                return self.pricing[m]
+            # 尝试前缀匹配（如 deepseek-chat → deepseek-chat 系）
+            for key, value in self.pricing.items():
+                if m.startswith(key) or key.startswith(m):
+                    return value
+            return {}
+
+        model_pricing = _find_pricing(model)
         if not model_pricing:
-            return 0.0
-        input_rate = model_pricing.get("input", 0) / 1_000_000
-        output_rate = model_pricing.get("output", 0) / 1_000_000
+            # 默认价格
+            model_pricing = {"input": 1.0, "output": 2.0}
+
+        input_rate = model_pricing.get("input", 1.0) / 1_000_000
+        output_rate = model_pricing.get("output", 2.0) / 1_000_000
         return input_tokens * input_rate + output_tokens * output_rate
 
 
-class DeepSeekAdapter(BaseAdapter):
-    """DeepSeek API 适配器"""
-
-    def __init__(self, config: dict[str, Any]):
-        super().__init__("deepseek", config)
-
-    def parse_usage(self, response_body: bytes) -> dict[str, int]:
-        try:
-            data = json.loads(response_body)
-            usage = data.get("usage", {})
-            return {
-                "input_tokens": usage.get("prompt_tokens", 0),
-                "output_tokens": usage.get("completion_tokens", 0),
-            }
-        except (json.JSONDecodeError, KeyError) as e:
-            logger.warning("DeepSeek 响应解析失败: %s", e)
-            return {"input_tokens": 0, "output_tokens": 0}
-
-
-class OpenRouterAdapter(BaseAdapter):
-    """OpenRouter API 适配器"""
-
-    def __init__(self, config: dict[str, Any]):
-        super().__init__("openrouter", config)
-
-    def parse_usage(self, response_body: bytes) -> dict[str, int]:
-        try:
-            data = json.loads(response_body)
-            usage = data.get("usage", {})
-            return {
-                "input_tokens": usage.get("prompt_tokens", 0),
-                "output_tokens": usage.get("completion_tokens", 0),
-            }
-        except (json.JSONDecodeError, KeyError) as e:
-            logger.warning("OpenRouter 响应解析失败: %s", e)
-            return {"input_tokens": 0, "output_tokens": 0}
-
-
-class GenericAdapter(BaseAdapter):
-    """通用适配器，兼容 OpenAI 格式"""
-
-    def __init__(self, provider_name: str, config: dict[str, Any]):
-        super().__init__(provider_name, config)
-
-    def parse_usage(self, response_body: bytes) -> dict[str, int]:
-        try:
-            data = json.loads(response_body)
-            usage = data.get("usage", {})
-            return {
-                "input_tokens": usage.get("prompt_tokens", 0),
-                "output_tokens": usage.get("completion_tokens", 0),
-            }
-        except (json.JSONDecodeError, KeyError) as e:
-            logger.warning("%s 响应解析失败: %s", self.provider_name, e)
-            return {"input_tokens": 0, "output_tokens": 0}
-
-
-def get_adapter(provider_name: str, config: dict[str, Any]) -> BaseAdapter:
-    """根据提供商名称获取适配器"""
-    from .adapters_mimo import MiMoAdapter
-
-    adapters: dict[str, type[BaseAdapter]] = {
-        "deepseek": DeepSeekAdapter,
-        "openrouter": OpenRouterAdapter,
-        "mimo": MiMoAdapter,
-    }
-    adapter_cls = adapters.get(provider_name, GenericAdapter)
-    if adapter_cls is GenericAdapter:
-        return GenericAdapter(provider_name, config)
-    return adapter_cls(config)
+def get_adapter(provider_name: str, config: dict[str, Any]) -> DeepSeekAdapter:
+    """根据提供商名称获取适配器（仅支持 DeepSeek）"""
+    return DeepSeekAdapter(config)

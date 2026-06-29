@@ -4,5 +4,7 @@ uvicorn>=0.34
 rich>=13.0
 pyyaml>=6.0
 mitmproxy>=10.0
+PySide6>=6.5
+websockets>=12.0
 rumps>=0.4.0; sys_platform == 'darwin'
 py2app>=0.28; sys_platform == 'darwin'

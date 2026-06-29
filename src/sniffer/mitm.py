@@ -13,17 +13,14 @@ from mitmproxy import ctx
 
 from src.config import Config
 from src.database import Database
-from src.proxy.adapters import get_adapter, BaseAdapter
+from src.events import event_bus, ApiCallEvent
+from src.proxy.adapters import DeepSeekAdapter
 from src.sniffer.cert import ensure_cert
 
 logger = logging.getLogger(__name__)
 
-# 目标 API 域名
-TARGET_PATTERNS = [
-    "api.deepseek.com",
-    "openrouter.ai",
-    "api.openai.com",
-]
+# 目标 API 域名（仅 DeepSeek）
+TARGET_PATTERNS = ["api.deepseek.com"]
 
 
 class ModelMonitorAddon:
@@ -63,14 +60,8 @@ class ModelMonitorAddon:
             except (json.JSONDecodeError, UnicodeDecodeError):
                 pass
 
-        # 识别提供商
-        host = flow.request.pretty_host
-        if "deepseek" in host:
-            self._pending[id(flow)]["provider"] = "deepseek"
-        elif "openrouter" in host:
-            self._pending[id(flow)]["provider"] = "openrouter"
-        else:
-            self._pending[id(flow)]["provider"] = "unknown"
+        # 识别提供商（仅 DeepSeek）
+        self._pending[id(flow)]["provider"] = "deepseek"
 
         logger.debug("嗅探到请求: %s %s", flow.request.method, flow.request.pretty_url)
 
@@ -87,7 +78,7 @@ class ModelMonitorAddon:
         provider = pending["provider"]
         providers_cfg = self._config.providers
         adapter_cfg = providers_cfg.get(provider, {})
-        adapter = get_adapter(provider, adapter_cfg)
+        adapter = DeepSeekAdapter(adapter_cfg)
 
         # 解析使用量
         usage: dict[str, int] = {"input_tokens": 0, "output_tokens": 0}
@@ -109,6 +100,19 @@ class ModelMonitorAddon:
             status_code=flow.response.status_code if flow.response else 0,
             endpoint=pending["path"],
         )
+
+        # 发布实时事件
+        event_bus.publish(ApiCallEvent(
+            mode="sniffer",
+            provider=provider,
+            model=model,
+            input_tokens=usage["input_tokens"],
+            output_tokens=usage["output_tokens"],
+            cost=cost,
+            latency_ms=latency_ms,
+            status_code=flow.response.status_code if flow.response else 0,
+            endpoint=pending["path"],
+        ).to_dict())
 
         logger.info(
             "嗅探记录: %s/%s - 输入:%d 输出:%d 费用:%.4f 延迟:%.1fms",

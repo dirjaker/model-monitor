@@ -30,45 +30,63 @@ pip install -r requirements.txt
 | `httpx` | 异步 HTTP 客户端（代理转发） |
 | `mitmproxy` | HTTPS 流量嗅探 |
 | `pyyaml` | YAML 配置解析 |
-| `rich` | 终端 UI 渲染 |
+| `rich` | CLI 日志和输出格式化 |
+| `PySide6` | 桌面小组件（可选） |
+| `websockets` | WebSocket 实时推送 |
+| `rumps` | macOS 菜单栏（可选，仅 macOS） |
+| `py2app` | macOS 应用打包（可选，仅 macOS） |
 
 ## 项目结构
 
 ```
 src/
 ├── __init__.py          # 版本号定义 (__version__)
-├── cli.py               # CLI 入口，8 个子命令
-├── config.py            # Config 类，YAML + 环境变量
+├── cli.py               # CLI 入口，7 个子命令
+├── config.py            # Config 类，YAML 配置
 ├── database.py          # Database 类，SQLite + WAL
+├── events.py            # EventBus 事件总线（发布/订阅）
 ├── proxy/
 │   ├── server.py        # ProxyServer (FastAPI + httpx)
-│   ├── adapters.py      # BaseAdapter + DeepSeek/OpenRouter/Generic
-│   └── adapters_mimo.py # MiMoAdapter
+│   └── adapters.py      # DeepSeekAdapter (Token 解析 + 费用计算)
 ├── sniffer/
 │   ├── mitm.py          # ModelMonitorAddon (mitmproxy 插件)
 │   └── cert.py          # CA 证书生成与管理
 ├── web/
 │   ├── app.py           # create_app() 工厂函数
-│   ├── api.py           # APIRouter REST 端点
-│   └── static/          # 前端静态文件 (HTML/JS/CSS)
-├── analysis/
-│   ├── alerts.py        # AlertManager 后台线程告警
-│   ├── predictor.py     # CostPredictor 线性回归预测
-│   └── optimizer.py     # CostOptimizer 使用模式分析
-├── tui/
-│   └── app.py           # TuiApp Rich 终端仪表盘
-├── macos/
-│   ├── app.py           # MacApp macOS 原生 GUI
-│   └── menu_bar.py      # 菜单栏集成
-└── accounts/
-    └── accounts.py      # AccountManager 多账户管理
+│   ├── api.py           # APIRouter REST + WS/SSE + 采集管理
+│   └── static/
+│       └── index.html   # 前端仪表盘 (Chart.js)
+├── widget/
+│   └── __init__.py      # 桌面小组件 (PySide6)
+└── macos/
+    ├── app.py           # MacApp macOS 原生 GUI (tkinter)
+    └── menu_bar.py      # MenuBarApp 菜单栏 (rumps)
 ```
 
 ## 核心设计模式
 
+### 事件总线（EventBus）
+
+所有模块通过事件总线解耦通信：
+
+```python
+# 发布事件（proxy/sniffer 记录调用后）
+from src.events import event_bus, ApiCallEvent
+event_bus.publish(ApiCallEvent(
+    mode="proxy", provider="deepseek",
+    model="deepseek-chat", input_tokens=100,
+    output_tokens=50, cost=0.0015,
+    latency_ms=320, status_code=200,
+).to_dict())
+
+# 订阅事件（WebSocket/SSE/桌面小组件）
+from src.events import event_bus
+event_bus.subscribe_sync(lambda event: handle_event(event))
+```
+
 ### 适配器模式（Adapter Pattern）
 
-所有 API 提供商通过 `BaseAdapter` 抽象类统一接口：
+目前仅内置 DeepSeek 适配器。通过 `BaseAdapter` 抽象类统一接口：
 
 ```python
 class BaseAdapter(ABC):
@@ -87,20 +105,39 @@ class BaseAdapter(ABC):
 
 添加新提供商只需：
 1. 在 `src/proxy/adapters.py` 中继承 `BaseAdapter`
-2. 在 `get_adapter()` 函数中注册
-3. 在 `config.yaml` 中添加提供商配置
+2. 在 `ProxyServer._resolve_upstream()` 中注册路由
+3. 在 `config.yaml` 中添加 `proxy.target`
+
+### 三种展示形式架构
+
+```
+                  ┌────────────────────────────┐
+                  │        SQLite 数据库         │
+                  │      (统一数据源)            │
+                  └──────────┬─────────────────┘
+                             │ 读取
+            ┌────────────────┼────────────────┐
+            │                │                │
+       ┌────▼─────┐   ┌─────▼─────┐   ┌──────▼──────┐
+       │  Web 仪表盘 │   │桌面小组件  │   │ macOS 原生   │
+       │ FastAPI +  │   │ PySide6   │   │ tkinter +   │
+       │  Chart.js  │   │ 浮动面板   │   │ rumps       │
+       │ WS/SSE实时 │   │ 系统托盘   │   │ 菜单栏+GUI  │
+       │ REST API   │   │ 5色主题    │   │ py2app打包  │
+       └────────────┘   └───────────┘   └─────────────┘
+```
+
+三种展示形式共享同一数据源（SQLite），通过 `src/database.py` 读取数据。Web 仪表盘额外通过事件总线获取实时推送。
 
 ### 配置驱动
 
-所有可配置项集中在 `config.yaml`，支持：
-- YAML 文件加载
-- `${VAR_NAME}` 环境变量引用
-- `MM_<SECTION>_<KEY>` 环境变量覆盖
-- 点号路径访问（如 `config.get("proxy.port")`）
+所有可配置项集中在 `config.yaml`，通过 `Config` 类的点号路径访问：
 
-### 线程安全数据库
-
-`Database` 类使用 `threading.local()` 为每个线程维护独立连接，配合 `threading.Lock()` 保护写操作，SQLite WAL 模式支持并发读。
+```python
+config = Config("config.yaml")
+port = config.get("proxy.port")       # → 12345
+target = config.get("proxy.target")   # → "https://api.deepseek.com"
+```
 
 ## 运行与调试
 
@@ -116,11 +153,17 @@ python main.py sniffer -v
 # Web 仪表盘
 python main.py web
 
-# 终端界面
-python main.py tui
+# 桌面小组件
+python main.py desktop
 
-# 查看统计
-python main.py stats
+# macOS 原生 GUI
+python main.py app               # 仅 macOS
+
+# 导出数据
+python main.py export -o data.json
+
+# 查看配置
+python main.py config --show
 ```
 
 ### 测试代理
@@ -130,10 +173,10 @@ python main.py stats
 python main.py proxy &
 
 # 测试请求
-curl -x http://localhost:8080 https://api.deepseek.com/v1/models
+curl -x http://localhost:12345 https://api.deepseek.com/v1/models
 
-# 查看统计
-python main.py stats
+# 启动 Web 仪表盘查看数据
+python main.py web
 ```
 
 ### 使用自定义配置
@@ -142,63 +185,53 @@ python main.py stats
 python main.py -c /path/to/config.yaml proxy
 ```
 
-## 添加新提供商适配器
+## 扩展开发
 
-1. 创建适配器类：
+### 添加新 API 提供商
+
+1. 创建适配器类继承 `BaseAdapter`：
 
 ```python
 # src/proxy/adapters.py
 class NewProviderAdapter(BaseAdapter):
-    def __init__(self, config: dict[str, Any]):
+    def __init__(self, config: dict):
         super().__init__("newprovider", config)
 
-    def parse_usage(self, response_body: bytes) -> dict[str, int]:
-        data = json.loads(response_body)
-        usage = data.get("usage", {})
+    def parse_usage(self, body: bytes) -> dict[str, int]:
+        data = json.loads(body)
         return {
-            "input_tokens": usage.get("prompt_tokens", 0),
-            "output_tokens": usage.get("completion_tokens", 0),
+            "input_tokens": data.get("usage", {}).get("prompt_tokens", 0),
+            "output_tokens": data.get("usage", {}).get("completion_tokens", 0),
         }
 ```
 
-2. 注册适配器：
+2. 在 `ProxyServer._resolve_upstream()` 中处理新提供商域名映射
 
-```python
-# src/proxy/adapters.py 的 get_adapter() 函数
-adapters = {
-    "deepseek": DeepSeekAdapter,
-    "openrouter": OpenRouterAdapter,
-    "mimo": MiMoAdapter,
-    "newprovider": NewProviderAdapter,  # 新增
-}
-```
+3. 添加定价到适配器的 `_pricing` 字典
 
-3. 添加配置：
+### 添加新展示形式
 
-```yaml
-# config.yaml
-providers:
-  newprovider:
-    base_url: https://api.newprovider.com
-    api_key: ${NEWPROVIDER_API_KEY}
-    pricing:
-      model-name:
-        input: 1.0
-        output: 2.0
-```
+项目的事件总线设计使其易于扩展新的展示形式：
+
+1. 创建新模块（如 `src/terminal/`）
+2. 通过 `Database` 读取数据
+3. 通过 `EventBus` 订阅实时事件
+4. 在 `src/cli.py` 中注册子命令
 
 ## 打包发布
 
 ### macOS 应用
 
 ```bash
+pip install py2app rumps
 python packaging/py2app_setup.py py2app
 # 生成 dist/Model Monitor.app
 ```
 
 ## 代码规范
 
-- 类型注解：使用 Python 3.12+ 类型语法（`dict[str, Any]` 而非 `Dict[str, Any]`）
-- 日志：使用 `logging` 模块，配合 RichHandler
-- 文档字符串：所有公共类和方法必须有中文文档字符串
-- 配置：新增可配置项必须在 `Config` 类中添加属性和默认值
+- **类型注解**: 使用 Python 3.12+ 类型语法（`dict[str, Any]` 而非 `Dict[str, Any]`）
+- **日志**: 使用 `logging` 模块，配合 RichHandler
+- **文档字符串**: 所有公共类和方法必须有中文文档字符串
+- **配置**: 新增配置项必须在 `Config` 类中添加属性和默认值
+- **事件**: 新增事件类型需扩展 `src/events.py` 中的 dataclass

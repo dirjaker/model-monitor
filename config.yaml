@@ -13,7 +13,6 @@ web:
   port: '10004'
 database:
   path: data/usage.db
-
 alerts:
   enabled: false
   daily_threshold: 10.0

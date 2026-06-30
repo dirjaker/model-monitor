@@ -2,6 +2,29 @@
 
 本文件记录 Model Monitor 项目的所有重要变更。格式基于 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)。
 
+## [1.1.0] - 2025-06-30
+
+### 重构
+
+- **精简项目**: 移除 API Key 依赖，转由用户自行配置
+- **裁剪展示形式**: 移除 TUI 终端（Rich）模块，聚焦三种展示形式（Web 仪表盘、桌面小组件、macOS 原生）
+- **移除智能分析**: 裁剪阈值告警、费用预测、优化建议模块
+- **移除多账户管理**: 简化配置管理
+- **代理简化**: 仅保留 DeepSeek 适配器，移除多提供商适配器（OpenRouter、MiMo、Generic）
+
+### 新增
+
+- **采集进程管理**: Web 仪表盘支持一键启停 proxy/sniffer 采集进程（`POST /api/mode/start`、`POST /api/mode/stop`、`GET /api/mode/status`）
+- **WebSocket/SSE 实时推送**: Web 仪表盘支持双通道实时数据推送
+- **事件总线**: 新增 `src/events.py` 发布/订阅模块，解耦采集和展示
+- **配置持久化**: Web 仪表盘支持在线修改配置并保存到 `config.yaml`
+
+### 文档
+
+- README 精简，突出三种展示形式
+- 架构文档更新，反映当前模块结构
+- 用户指南新增三种展示形式的详细使用教程
+
 ## [1.0.0] - 2025-06-22
 
 ### 新增

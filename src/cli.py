@@ -44,7 +44,8 @@ def cmd_proxy(args: argparse.Namespace) -> int:
     db = Database(db_path)
 
     server = ProxyServer(config, db)
-    console.print(f"[bold green]代理服务器启动[/bold green] - {config.proxy_host}:{config.proxy_port}")
+    display_host = "localhost" if config.proxy_host in ("0.0.0.0", "127.0.0.1") else config.proxy_host
+    console.print(f"[bold green]代理服务器启动[/bold green] - http://{display_host}:{config.proxy_port}")
     console.print(f"数据库: {db_path}")
     try:
         server.run()
@@ -71,6 +72,19 @@ def cmd_sniffer(args: argparse.Namespace) -> int:
     return 0
 
 
+def _get_lan_ip() -> str:
+    """获取局域网 IP 地址"""
+    import socket
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("10.255.255.255", 1))
+        ip = s.getsockname()[0]
+        s.close()
+        return ip
+    except Exception:
+        return "127.0.0.1"
+
+
 def cmd_web(args: argparse.Namespace) -> int:
     """启动 Web 仪表盘"""
     from src.config import Config
@@ -87,7 +101,11 @@ def cmd_web(args: argparse.Namespace) -> int:
     db = Database(config.db_path)
     app = create_app(config, db)
 
-    console.print(f"[bold green]Web 仪表盘启动[/bold green] - http://{config.web_host}:{config.web_port}")
+    display_host = "localhost" if config.web_host == "0.0.0.0" else config.web_host
+    console.print(f"[bold green]Web 仪表盘启动[/bold green] - http://{display_host}:{config.web_port}")
+    if config.web_host == "0.0.0.0":
+        console.print(f"  局域网: http://{_get_lan_ip()}:{config.web_port}")
+        console.print(f"  本地:   http://localhost:{config.web_port}")
     uvicorn.run(app, host=config.web_host, port=config.web_port, log_level="info")
     return 0
 

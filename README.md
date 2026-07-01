@@ -49,6 +49,11 @@ python main.py proxy
 python main.py web
 ```
 
+---
+
+> 🧭 **新手快速入口 → [📖 完整用户指南](docs/user-guide.md)**
+> 包含详细的安装步骤、采集模式配置、三种展示形式的使用教程、常见问题解答。
+
 ### 命令行用法
 
 ```bash
